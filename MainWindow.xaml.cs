@@ -1,40 +1,33 @@
 ﻿using System;
-using System.IO;
+using System.Diagnostics;
 using System.Net.Sockets;
-using System.Text;
+using System.Threading.Tasks;
 using System.Windows;
-using Microsoft.VisualBasic;
 
 namespace Vortex
 {
     public partial class MainWindow : Window
     {
-        private TcpClient _client = null!;
-        private NetworkStream _stream = null!;
+        private Socket? _socket;
 
         public MainWindow()
         {
             InitializeComponent();
         }
 
-        private void ConnectButton_Click(object sender, RoutedEventArgs e)
+        private async void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             string serverIp = ServerIpTextBox.Text;
             int port = int.Parse(PortTextBox.Text);
 
             try
             {
-                if(_client == null)
+                if (_socket == null || !_socket.Connected)
                 {
-                    _client = new TcpClient(serverIp, port);
+                    _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                    await _socket.ConnectAsync(serverIp, port);
+                    MessageBox.Show("Connected to server");
                 }
-
-                if(_client != null && _stream == null)
-                {
-                    _stream = _client.GetStream();
-                }
-
-                MessageBox.Show("Connected to server");
             }
             catch (Exception ex)
             {
@@ -44,22 +37,18 @@ namespace Vortex
 
         private void DisconnectButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_client != null)
+            if (_socket != null && _socket.Connected)
             {
-                _client.Close();
-                _client = null!;
-            }
-            if (_stream != null)
-            {
-                _stream.Close();
-                _stream = null!;
+                _socket.Shutdown(SocketShutdown.Both);
+                _socket.Close();
+                _socket = null;
             }
             MessageBox.Show("Disconnected from server");
         }
 
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_client == null || !_client.Connected)
+            if (_socket == null || !_socket.Connected)
             {
                 MessageBox.Show("Not connected to server");
                 return;
@@ -70,19 +59,20 @@ namespace Vortex
 
             try
             {
-                await _stream.WriteAsync(data, 0, data.Length);
-                await _stream.FlushAsync();
+                // コマンドを送信
+                Debug.WriteLine("Sending data...");
+                await Data.SendDataAsync(_socket, data);
+                Debug.WriteLine("Sent data");
 
-                if (_client.Available == 0)
-                {
-                    MessageBox.Show("No response from server");
-                    return;
-                }
+                // 応答を受信
+                Debug.WriteLine("Receiving data...");
+                byte[] receivedData = await Data.ReceiveDataAsync(_socket);
+                Debug.WriteLine("Received data");
 
-                byte[] responseData = new byte[_client.Available];
-                int bytes = await _stream.ReadAsync(responseData, 0, responseData.Length);
-                string response = BitConverter.ToString(responseData, 0, bytes);
+                // 受け取ったデータを文字列に変換
+                string response = BitConverter.ToString(receivedData);
 
+                // 応答を表示
                 ResponseTextBox.Text = response;
             }
             catch (Exception ex)
