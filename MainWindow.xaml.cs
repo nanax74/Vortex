@@ -60,14 +60,10 @@ namespace Vortex
             try
             {
                 // コマンドを送信
-                Debug.WriteLine("Sending data...");
                 await Data.SendDataAsync(_socket, data);
-                Debug.WriteLine("Sent data");
 
                 // 応答を受信
-                Debug.WriteLine("Receiving data...");
                 byte[] receivedData = await Data.ReceiveDataAsync(_socket);
-                Debug.WriteLine("Received data");
 
                 // 受け取ったデータを文字列に変換
                 string response = BitConverter.ToString(receivedData);

@@ -63,6 +63,7 @@ namespace Vortex
                     }
                     totalSent += sent;
                 }
+                Debug.WriteLine("Sent:{0}bytes", data.Length);
             }
             catch (Exception ex)
             {
@@ -95,7 +96,7 @@ namespace Vortex
                     }
                     totalLengthReceived += received;
                 }
-                dataLength = BitConverter.ToInt32(dataLengthBytes, 0);
+                dataLength = BitConverter.ToInt32(dataLengthBytes.Reverse().ToArray(), 0);  // バイトオーダーを反転させつつint型に変換
 
                 byte[] data = new byte[dataLength];
                 int totalReceived = 0;
@@ -116,6 +117,7 @@ namespace Vortex
                     }
                     totalReceived += received;
                 }
+                Debug.WriteLine("Received:{0}bytes", data.Length);
                 return data;
             }
             catch (Exception ex)
@@ -177,6 +179,7 @@ namespace Vortex
                     }
                     totalSent += sent;
                 }
+                Debug.WriteLine("Sent:{0}bytes", data.Length);
             }
             catch (Exception ex)
             {
@@ -195,6 +198,7 @@ namespace Vortex
 
                 while (totalLengthReceived < dataLengthBytes.Length)
                 {
+
                     int received = await socket.ReceiveAsync(new ArraySegment<byte>(dataLengthBytes, totalLengthReceived, dataLengthBytes.Length - totalLengthReceived), SocketFlags.None);
                     if (received <= 0) // receive関数の戻り値をチェック
                     {
@@ -210,7 +214,7 @@ namespace Vortex
                     }
                     totalLengthReceived += received;
                 }
-                dataLength = BitConverter.ToInt32(dataLengthBytes, 0);
+                dataLength = BitConverter.ToInt32(dataLengthBytes.Reverse().ToArray(), 0);  // バイトオーダーを反転させつつint型に変換
 
                 byte[] data = new byte[dataLength];
                 int totalReceived = 0;
@@ -231,7 +235,7 @@ namespace Vortex
                     }
                     totalReceived += received;
                 }
-
+                Debug.WriteLine("Received:{0}bytes", data.Length);
                 return data;
             }
             catch (Exception ex)
