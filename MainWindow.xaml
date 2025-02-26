@@ -66,11 +66,19 @@
                             <TextBox x:Name="CommandTextBox" Grid.Row="0" Margin="10" Grid.Column="1" FontSize="36"/>
                         </Grid>
                         <Grid Grid.Row="1">
-                            <Button Content="Send" Grid.Row="0" Click="SendButton_Click" Margin="10"/>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="13*"/>
+                                <ColumnDefinition Width="86*"/>
+                            </Grid.ColumnDefinitions>
+                            <Button x:Name="SendButton" Content="Send" Grid.Row="0" Click="SendButton_Click" Margin="10,10,10,10" Grid.ColumnSpan="2"/>
                         </Grid>
                         <Grid Grid.Row="2">
-                            <Label Content="Response:" Grid.Row="1" Grid.Column="0" VerticalAlignment="Center" Margin="10"/>
-                            <TextBox x:Name="ResponseTextBox" Grid.Row="2" Grid.Column="0" IsReadOnly="False" TextWrapping="Wrap" Margin="10"/>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="*"/>
+                            </Grid.RowDefinitions>
+                            <Label Content="Response" FontSize="24" Margin="10,0"/>
+                            <TextBox x:Name="ResponseTextBox" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" Margin="10,0"/>
                         </Grid>
                     </Grid>
                 </TabItem>

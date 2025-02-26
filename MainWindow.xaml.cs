@@ -46,6 +46,9 @@ namespace Vortex
             MessageBox.Show("Disconnected from server");
         }
 
+        // 送信と受信の順序を保証するためのロック
+        private static readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
+
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             if (_socket == null || !_socket.Connected)
@@ -59,17 +62,29 @@ namespace Vortex
 
             try
             {
-                // コマンドを送信
-                await Data.SendDataAsync(_socket, data);
+                // 他の送信が完了するまで待つ (ロック)
+                Debug.WriteLine("Waiting for send lock");
+                await _sendLock.WaitAsync();
 
-                // 応答を受信
-                byte[] receivedData = await Data.ReceiveDataAsync(_socket);
+                try
+                {
+                    // コマンドを送信
+                    await Data.SendDataAsync(_socket, data);
 
-                // 受け取ったデータを文字列に変換
-                string response = BitConverter.ToString(receivedData);
+                    // 応答を受信
+                    byte[] receivedData = await Data.ReceiveDataAsync(_socket);
 
-                // 応答を表示
-                ResponseTextBox.Text = response;
+                    // 受け取ったデータを文字列に変換
+                    string response = BitConverter.ToString(receivedData);
+
+                    // 応答を表示
+                    ResponseTextBox.Text = response;
+                }
+                finally
+                {
+                    // ロックを解放
+                    _sendLock.Release();
+                }
             }
             catch (Exception ex)
             {

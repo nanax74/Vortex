@@ -150,7 +150,7 @@ namespace Vortex
                     {
                         if (sent == 0)
                         {
-                            Debug.WriteLine("Connection closed by peer.");
+                            Debug.WriteLine("Server disconnected");
                         }
                         else
                         {
@@ -169,7 +169,7 @@ namespace Vortex
                     {
                         if (sent == 0)
                         {
-                            Debug.WriteLine("Connection closed by peer.");
+                            Debug.WriteLine("Server disconnected");
                         }
                         else
                         {
@@ -204,7 +204,7 @@ namespace Vortex
                     {
                         if (received == 0)
                         {
-                            Debug.WriteLine("Connection closed by peer.");
+                            Debug.WriteLine("Server disconnected");
                         }
                         else
                         {
@@ -225,7 +225,7 @@ namespace Vortex
                     {
                         if (received == 0)
                         {
-                            Debug.WriteLine("Connection closed by peer.");
+                            Debug.WriteLine("Server disconnected");
                         }
                         else
                         {
