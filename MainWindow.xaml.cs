@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows;
@@ -49,6 +50,10 @@ namespace Vortex
         // 送信と受信の順序を保証するためのロック
         private static readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
 
+        const int DATA_TYPE_COMMAND = 0x01;
+        const int DATA_TYPE_RESPONSE = 0x02;
+        const int DATA_TYPE_PROGRESS = 0x03;
+
         private async void SendButton_Click(object sender, RoutedEventArgs e)
         {
             if (_socket == null || !_socket.Connected)
@@ -58,7 +63,11 @@ namespace Vortex
             }
 
             string command = CommandTextBox.Text;
-            byte[] data = ConvertEx.ToBytes(command);
+            byte[] dataInput = ConvertEx.ToBytes(command);
+
+            if (dataInput.Length < 1) return;
+
+            Stopwatch stopwatch = Stopwatch.StartNew(); // 計測開始
 
             try
             {
@@ -69,13 +78,13 @@ namespace Vortex
                 try
                 {
                     // コマンドを送信
-                    await Data.SendDataAsync(_socket, data);
+                    await Data.SendPacketAsync(_socket, dataInput, DATA_TYPE_COMMAND);
 
                     // 応答を受信
-                    byte[] receivedData = await Data.ReceiveDataAsync(_socket);
+                    var (result, dataOutput, type) = await Data.ReceivePacketAsync(_socket);
 
                     // 受け取ったデータを文字列に変換
-                    string response = BitConverter.ToString(receivedData);
+                    string response = BitConverter.ToString(dataOutput).Replace("-", "");
 
                     // 応答を表示
                     ResponseTextBox.Text = response;
@@ -89,6 +98,11 @@ namespace Vortex
             catch (Exception ex)
             {
                 MessageBox.Show($"Error sending data: {ex.Message}");
+            }
+            finally
+            {
+                stopwatch.Stop(); // 計測終了
+                Debug.WriteLine($"SendButton_Click executed in {stopwatch.ElapsedMilliseconds} ms");
             }
         }
     }

@@ -6,243 +6,207 @@ using System.Net;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Navigation;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Vortex
 {
     public static class Data
     {
-        public static void SendData(Socket socket, byte[] data)
-        {
-            // データが空の場合中止
-            if (data.Length == 0)
-            {
-                Debug.WriteLine("No data to send");
-                return;
-            }
+        const int MAX_DATA_SIZE = 0x10000; // データ本体の最大サイズ
 
+        public static int SendAll(Socket socket, byte[] data)
+        {
             try
             {
-                // 先にデータの長さを送信
-                int dataLength = data.Length;
-                byte[] dataLengthBytes = BitConverter.GetBytes(dataLength);
-                int totalLengthSent = 0;
-                while (totalLengthSent < dataLengthBytes.Length)
-                {
-                    int sent = socket.Send(dataLengthBytes, totalLengthSent, dataLengthBytes.Length - totalLengthSent, SocketFlags.None);
-                    if (sent <= 0) // send関数の戻り値をチェック
-                    {
-                        if (sent == 0)
-                        {
-                            Debug.WriteLine("Connection closed by peer.");
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Failed to send data length");
-                        }
-                        return;
-                    }
-                    totalLengthSent += sent;
-                }
+                int size = data.Length;
+                Debug.WriteLine("Sending:{0}bytes", size);
+                int sent = 0;
 
-                int totalSent = 0;
-                while (totalSent < data.Length)
+                while (sent < size)
                 {
-                    int sent = socket.Send(data, totalSent, Math.Min(4096, data.Length - totalSent), SocketFlags.None);
-                    if (sent <= 0) // send関数の戻り値をチェック
+                    int bytes = socket.Send(data, sent, size - sent, SocketFlags.None);
+                    if (bytes <= 0) // send関数の戻り値をチェック
                     {
-                        if (sent == 0)
+                        if (bytes == 0)
                         {
-                            Debug.WriteLine("Connection closed by peer.");
+                            Debug.WriteLine("Disconnect from server");
+                            return 0;
                         }
                         else
                         {
                             Debug.WriteLine("Failed to send data");
                         }
-                        return;
+                        return -1;
                     }
-                    totalSent += sent;
+                    sent += bytes;
                 }
                 Debug.WriteLine("Sent:{0}bytes", data.Length);
+                return sent;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to send data: {ex.Message}");
+                return -1;
             }
         }
 
-        public static byte[] ReceiveData(Socket socket)
+        public static int ReceiveAll(Socket socket, byte[] data, int size)
         {
             try
             {
-                // 先にデータの長さを受信
-                int dataLength = 0;
-                byte[] dataLengthBytes = new byte[4];
-                int totalLengthReceived = 0;
-                while (totalLengthReceived < dataLengthBytes.Length)
-                {
-                    int received = socket.Receive(dataLengthBytes, totalLengthReceived, dataLengthBytes.Length - totalLengthReceived, SocketFlags.None);
-                    if (received <= 0) // send関数の戻り値をチェック
-                    {
-                        if (received == 0)
-                        {
-                            Debug.WriteLine("Connection closed by peer.");
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Failed to send data length");
-                        }
-                        return Array.Empty<byte>();
-                    }
-                    totalLengthReceived += received;
-                }
-                dataLength = BitConverter.ToInt32(dataLengthBytes.Reverse().ToArray(), 0);  // バイトオーダーを反転させつつint型に変換
+                Debug.WriteLine("Receiving:{0}bytes", size);
+                int received = 0;
 
-                byte[] data = new byte[dataLength];
-                int totalReceived = 0;
-                while (totalReceived < dataLength)
+                while (received < size)
                 {
-                    int received = socket.Receive(data, totalReceived, Math.Min(4096, dataLength - totalReceived), SocketFlags.None);
-                    if (received <= 0) // send関数の戻り値をチェック
+                    int bytes = socket.Receive(data, received, size - received, SocketFlags.None);
+                    if (bytes <= 0) // send関数の戻り値をチェック
                     {
-                        if (received == 0)
+                        if (bytes == 0)
                         {
-                            Debug.WriteLine("Connection closed by peer.");
+                            Debug.WriteLine("Disconnect from server");
+                            return 0;
                         }
                         else
                         {
                             Debug.WriteLine("Failed to send data");
                         }
-                        return Array.Empty<byte>();
+                        return -1;
                     }
-                    totalReceived += received;
+                    received += bytes;
                 }
                 Debug.WriteLine("Received:{0}bytes", data.Length);
-                return data;
+                return received;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to receive data: {ex.Message}");
-                return Array.Empty<byte>();
+                return -1;
             }
         }
 
-        public static async Task SendDataAsync(Socket socket, byte[] data)
+        public static async Task<int> SendAllAsync(Socket socket, byte[] data)
         {
-            // データが空の場合中止
-            if (data.Length == 0)
-            {
-                Debug.WriteLine("No data to send");
-                return;
-            }
-
             try
             {
-                // 先にデータの長さを送信
-                int dataLength = data.Length;
-                byte[] dataLengthBytes = BitConverter.GetBytes(dataLength);
-                int totalLengthSent = 0;
+                int size = data.Length;
+                Debug.WriteLine("Sending:{0}bytes", size);
+                int sent = 0;
 
-                while (totalLengthSent < dataLengthBytes.Length)
+                while (sent < size)
                 {
-                    int sent = await socket.SendAsync(new ArraySegment<byte>(dataLengthBytes, totalLengthSent, dataLengthBytes.Length - totalLengthSent), SocketFlags.None);
-                    if (sent <= 0) // send関数の戻り値をチェック
+                    int bytes = await socket.SendAsync(new ArraySegment<byte>(data, sent, size - sent), SocketFlags.None);
+                    if (bytes <= 0) // send関数の戻り値をチェック
                     {
-                        if (sent == 0)
+                        if (bytes == 0)
                         {
-                            Debug.WriteLine("Server disconnected");
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Failed to send data length");
-                        }
-                        return;
-                    }
-                    totalLengthSent += sent;
-                }
-
-                int totalSent = 0;
-                while (totalSent < data.Length)
-                {
-                    int sent = await socket.SendAsync(new ArraySegment<byte>(data, totalSent, Math.Min(4096, data.Length - totalSent)), SocketFlags.None);
-                    if (sent <= 0) // send関数の戻り値をチェック
-                    {
-                        if (sent == 0)
-                        {
-                            Debug.WriteLine("Server disconnected");
+                            Debug.WriteLine("Disconnect from server");
+                            return 0;
                         }
                         else
                         {
                             Debug.WriteLine("Failed to send data");
                         }
-                        return;
+                        return -1;
                     }
-                    totalSent += sent;
+                    sent += bytes;
                 }
                 Debug.WriteLine("Sent:{0}bytes", data.Length);
+                return sent;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to send data: {ex.Message}");
+                return -1;
             }
         }
 
-        public static async Task<byte[]> ReceiveDataAsync(Socket socket)
+        public static async Task<int> ReceiveAllAsync(Socket socket, byte[] data, int size)
         {
             try
             {
-                // 先にデータの長さを受信
-                int dataLength = 0;
-                byte[] dataLengthBytes = new byte[4];
-                int totalLengthReceived = 0;
+                Debug.WriteLine("Receiving:{0}bytes", size);
+                int received = 0;
 
-                while (totalLengthReceived < dataLengthBytes.Length)
+                while (received < size)
                 {
-
-                    int received = await socket.ReceiveAsync(new ArraySegment<byte>(dataLengthBytes, totalLengthReceived, dataLengthBytes.Length - totalLengthReceived), SocketFlags.None);
-                    if (received <= 0) // receive関数の戻り値をチェック
+                    int bytes = await socket.ReceiveAsync(new ArraySegment<byte>(data, received, size - received), SocketFlags.None);
+                    if (bytes <= 0) // send関数の戻り値をチェック
                     {
-                        if (received == 0)
+                        if (bytes == 0)
                         {
-                            Debug.WriteLine("Server disconnected");
-                        }
-                        else
-                        {
-                            Debug.WriteLine("Failed to receive data length");
-                        }
-                        return Array.Empty<byte>();
-                    }
-                    totalLengthReceived += received;
-                }
-                dataLength = BitConverter.ToInt32(dataLengthBytes.Reverse().ToArray(), 0);  // バイトオーダーを反転させつつint型に変換
-
-                byte[] data = new byte[dataLength];
-                int totalReceived = 0;
-                while (totalReceived < dataLength)
-                {
-                    int received = await socket.ReceiveAsync(new ArraySegment<byte>(data, totalReceived, Math.Min(4096, dataLength - totalReceived)), SocketFlags.None);
-                    if (received <= 0) // receive関数の戻り値をチェック
-                    {
-                        if (received == 0)
-                        {
-                            Debug.WriteLine("Server disconnected");
+                            Debug.WriteLine("Disconnect from server");
+                            return 0;
                         }
                         else
                         {
                             Debug.WriteLine("Failed to receive data");
                         }
-                        return Array.Empty<byte>();
+                        return -1;
                     }
-                    totalReceived += received;
+                    received += bytes;
                 }
                 Debug.WriteLine("Received:{0}bytes", data.Length);
-                return data;
+                return received;
             }
             catch (Exception ex)
             {
                 Debug.WriteLine($"Failed to receive data: {ex.Message}");
-                return Array.Empty<byte>();
+                return -1;
             }
+        }
+
+        public static async Task<int> SendPacketAsync(Socket socket, byte[] data, int type)
+        {
+            int size = data.Length;
+
+            if (size == 0)
+            {
+                Debug.WriteLine("Data to send is empty");
+                return -1;
+            }
+            else if (size > MAX_DATA_SIZE)
+            {
+                Debug.WriteLine("Data to send is too large:{0}", size);
+                return -1;
+            }
+
+            byte[] header = new byte[8]; // 4バイトの type + 4バイトの size
+            BitConverter.GetBytes(type).Reverse().ToArray().CopyTo(header, 0);
+            BitConverter.GetBytes(data.Length).Reverse().ToArray().CopyTo(header, 4);
+
+            // ヘッダを送信
+            int result = await SendAllAsync(socket, header);
+            if (result <= 0) return result;
+
+            return await SendAllAsync(socket, data);
+        }
+
+        public static async Task<(int result, byte[] data, int type)> ReceivePacketAsync(Socket socket)
+        {
+            int headerSize = 8;
+            byte[] header = new byte[headerSize];
+
+            int result;
+
+            result = await ReceiveAllAsync(socket, header, headerSize);
+            if (result <= 0) return (result, new byte[0], 0);
+
+            int type = BitConverter.ToInt32(header, 0);
+            int size = BitConverter.ToInt32(header, 4);
+
+            if(size > MAX_DATA_SIZE)
+            {
+                Debug.WriteLine("Data to receive is too large:{0}", size);
+                return (-1, new byte[0], 0);
+            }
+
+            if(size == 0) return (-1, new byte[0], 0);
+
+            byte[] data = new byte[size];
+            result = await ReceiveAllAsync(socket, data, size);
+            return (result, data, type);
         }
     }
 }
