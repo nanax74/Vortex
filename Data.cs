@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -195,6 +196,9 @@ namespace Vortex
 
             int type = BitConverter.ToInt32(header, 0);
             int size = BitConverter.ToInt32(header, 4);
+
+            type = BinaryPrimitives.ReverseEndianness(type);
+            size = BinaryPrimitives.ReverseEndianness(size);
 
             if(size > MAX_DATA_SIZE)
             {

@@ -81,7 +81,20 @@ namespace Vortex
                     await Data.SendPacketAsync(_socket, dataInput, DATA_TYPE_COMMAND);
 
                     // 応答を受信
-                    var (result, dataOutput, type) = await Data.ReceivePacketAsync(_socket);
+                    int result;
+                    byte[] dataOutput = Array.Empty<byte>();
+                    int type = 0;
+                    while (type != DATA_TYPE_RESPONSE)
+                    {
+                        (result, dataOutput, type) = await Data.ReceivePacketAsync(_socket);
+                        if (type == DATA_TYPE_PROGRESS)
+                        {
+                            string progress = BitConverter.ToString(dataOutput).Replace("-", "");
+
+                            // 応答を表示
+                            ResponseTextBox.Text = progress;
+                        }
+                    }
 
                     // 受け取ったデータを文字列に変換
                     string response = BitConverter.ToString(dataOutput).Replace("-", "");
