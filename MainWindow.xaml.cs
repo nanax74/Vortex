@@ -16,6 +16,11 @@ namespace Vortex
             InitializeComponent();
         }
 
+        private async void Window_Loaded(object sender, RoutedEventArgs e)
+        {
+            await UpdateVortex();
+        }
+
         private async void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
             string serverIp = ServerIpTextBox.Text;

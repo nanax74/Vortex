@@ -5,11 +5,11 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Vortex"
         mc:Ignorable="d"
-        Title="Vortex" Height="450" Width="800">
+        Title="Vortex" Height="540" Width="960" Loaded="Window_Loaded">
     <Viewbox>
-        <Grid  Height="400" Width="600">
+        <Grid  Height="540" Width="960">
             <TabControl>
-                <TabItem Header="Connect" FontSize="24">
+                <TabItem Header="Connect" FontSize="20">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="1*"/>
@@ -50,7 +50,7 @@
                         </Grid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Command" FontSize="24">
+                <TabItem Header="Command" FontSize="20">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>
@@ -79,6 +79,46 @@
                             </Grid.RowDefinitions>
                             <Label Content="Response" FontSize="24" Margin="10,0"/>
                             <TextBox x:Name="ResponseTextBox" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" Margin="10,0"/>
+                        </Grid>
+                    </Grid>
+                </TabItem>
+                <TabItem Header="Memory Viewer" FontSize="20">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <Grid Grid.Row="0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Address:" Grid.Column="0" VerticalAlignment="Center" Margin="10" FontSize="24"/>
+                            <TextBox x:Name="AddressTextBox" Grid.Row="0" Margin="10" Grid.Column="1" FontSize="36"/>
+                        </Grid>
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Label Content="Value:" Grid.Column="0" VerticalAlignment="Center" Margin="10" FontSize="24"/>
+                            <TextBox x:Name="ValueTextBox" Grid.Row="0" Margin="10" Grid.Column="1" FontSize="36"/>
+                        </Grid>
+                        <Grid Grid.Row="2">
+                            <CheckBox Content="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="20" UseLayoutRounding="False" RenderTransformOrigin="0.5,0.5">
+                                <CheckBox.RenderTransform>
+                                    <TransformGroup>
+                                        <ScaleTransform/>
+                                        <SkewTransform AngleY="-0.149"/>
+                                        <RotateTransform/>
+                                        <TranslateTransform Y="0.249"/>
+                                    </TransformGroup>
+                                </CheckBox.RenderTransform>
+                                <CheckBox.LayoutTransform>
+                                    <ScaleTransform ScaleX="3" ScaleY="3"/>
+                                </CheckBox.LayoutTransform>
+                            </CheckBox>
                         </Grid>
                     </Grid>
                 </TabItem>
