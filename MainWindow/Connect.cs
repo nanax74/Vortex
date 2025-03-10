@@ -11,15 +11,7 @@ namespace Vortex
     {
         private Socket? _socket;
 
-        public MainWindow()
-        {
-            InitializeComponent();
-        }
-
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            await UpdateVortex();
-        }
+        private CancellationTokenSource? _cancellationTokenSource;
 
         private async void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
@@ -33,6 +25,10 @@ namespace Vortex
                     _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     await _socket.ConnectAsync(serverIp, port);
                     MessageBox.Show("Connected to server");
+
+                    // キャンセルトークンを生成して、無限ループを管理
+                    _cancellationTokenSource = new CancellationTokenSource();
+                    await Task.Run(() => ReceivePacketFromServer(_cancellationTokenSource.Token));
                 }
             }
             catch (Exception ex)
@@ -43,13 +39,7 @@ namespace Vortex
 
         private void DisconnectButton_Click(object sender, RoutedEventArgs e)
         {
-            if (_socket != null && _socket.Connected)
-            {
-                _socket.Shutdown(SocketShutdown.Both);
-                _socket.Close();
-                _socket = null;
-            }
-            MessageBox.Show("Disconnected from server");
+            DisconnectServer();
         }
     }
 }
