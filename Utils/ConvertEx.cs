@@ -23,6 +23,6 @@ public static class ConvertEx
 
             data.Add(Convert.ToByte(buffer, 16));
         }
-        return data.ToArray(); ;
+        return data.ToArray();
     }
 }

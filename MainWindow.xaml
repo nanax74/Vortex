@@ -70,7 +70,7 @@
                                 <ColumnDefinition Width="13*"/>
                                 <ColumnDefinition Width="86*"/>
                             </Grid.ColumnDefinitions>
-                            <Button x:Name="SendButton" Content="Send" Grid.Row="0" Click="SendButton_Click" Margin="10,10,10,10" Grid.ColumnSpan="2"/>
+                            <Button x:Name="CommandSendButton" Content="Send" Grid.Row="0" Click="CommandSendButton_Click" Margin="10,10,10,10" Grid.ColumnSpan="2"/>
                         </Grid>
                         <Grid Grid.Row="2">
                             <Grid.RowDefinitions>
