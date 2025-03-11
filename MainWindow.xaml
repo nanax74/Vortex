@@ -75,7 +75,7 @@
                             <Button x:Name="CommandSendButton" Content="Send" Grid.Row="0" Click="CommandSendButton_Click" Margin="5" FontSize="36" Height="80"/>
                         </Grid>
                         <Grid Grid.Row="2">
-                            <TextBox x:Name="ResponseTextBox" FontSize="36" IsReadOnly="True" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5" materialDesign:HintAssist.Hint="Response"/>
+                            <TextBox x:Name="ResponseTextBox" FontSize="36" IsReadOnly="True" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5" materialDesign:HintAssist.Hint="Response" UseLayoutRounding="True" HorizontalContentAlignment="Left" VerticalContentAlignment="Top"/>
                         </Grid>
                     </Grid>
                 </TabItem>
