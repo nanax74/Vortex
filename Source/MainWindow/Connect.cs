@@ -11,7 +11,7 @@ namespace Vortex
     {
         private Socket? _socket;
 
-        private CancellationTokenSource? _cancellationTokenSource;
+        private CancellationTokenSource? _ctsDisconnect;
 
         private async void ConnectButton_Click(object sender, RoutedEventArgs e)
         {
@@ -24,11 +24,12 @@ namespace Vortex
                 {
                     _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
                     await _socket.ConnectAsync(serverIp, port);
+                    _socket.NoDelay = true;
                     MessageBox.Show("Connected to server");
 
                     // キャンセルトークンを生成して、無限ループを管理
-                    _cancellationTokenSource = new CancellationTokenSource();
-                    await Task.Run(() => ReceivePacketFromServer(_cancellationTokenSource.Token));
+                    _ctsDisconnect = new CancellationTokenSource();
+                    await Task.Run(() => CheckConnection(_ctsDisconnect.Token));
                 }
             }
             catch (Exception ex)

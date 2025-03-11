@@ -43,10 +43,10 @@ namespace Vortex
             BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(0, 4), size);
             BinaryPrimitives.WriteInt32BigEndian(header.AsSpan(4, 4), Type);
 
-            int result = await Transfer.SendAllAsync(socket, header);
+            int result = await Transfer.SendAllAsync(socket, header, header.Length);
             if (result <= 0) return result;
 
-            return await Transfer.SendAllAsync(socket, Data);
+            return await Transfer.SendAllAsync(socket, Data, Data.Length);
         }
 
         public async Task<int> ReceivePacketAsync(Socket socket)

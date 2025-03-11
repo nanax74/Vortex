@@ -11,7 +11,7 @@ namespace Vortex
     public partial class MainWindow : Window
     {
         // 送信と受信の順序を保証するためのロック
-        private static readonly SemaphoreSlim _sendLock = new SemaphoreSlim(1, 1);
+        private static readonly SemaphoreSlim _sendLockCommand = new SemaphoreSlim(1, 1);
 
         private async void CommandSendButton_Click(object sender, RoutedEventArgs e)
         {
@@ -32,18 +32,23 @@ namespace Vortex
             {
                 // 他の送信が完了するまで待つ (ロック)
                 Debug.WriteLine("Waiting for send lock");
-                await _sendLock.WaitAsync();
+                await _sendLockCommand.WaitAsync();
 
                 try
                 {
                     // コマンドを送信
                     Packet sendPacket = new Packet(dataInput, Packet.DATA_TYPE_DATA);
                     await sendPacket.SendPacketAsync(_socket);
+
+                    Packet receivePacket = new Packet();
+                    await receivePacket.ReceivePacketAsync(_socket);
+
+                    ResponseTextBox.Text = BitConverter.ToString(receivePacket.Data).Replace("-", "");
                 }
                 finally
                 {
                     // ロックを解放
-                    _sendLock.Release();
+                    _sendLockCommand.Release();
                 }
             }
             catch (Exception ex)

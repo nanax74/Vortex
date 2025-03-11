@@ -16,7 +16,7 @@ namespace Vortex
             if (_socket != null && _socket.Connected)
             {
                 // キャンセル処理
-                _cancellationTokenSource?.Cancel();
+                _ctsDisconnect?.Cancel();
 
                 // ソケットのシャットダウンとクローズ
                 _socket.Shutdown(SocketShutdown.Both);
@@ -26,21 +26,32 @@ namespace Vortex
             MessageBox.Show("Disconnected from server");
         }
 
-        public async Task ReceivePacketFromServer(CancellationToken token)
+        public async Task CheckConnection(CancellationToken token)
         {
             while (!token.IsCancellationRequested)
             {
                 if (_socket != null && _socket.Connected)
                 {
-                    Packet packet = new Packet();
-                    int result = await packet.ReceivePacketAsync(_socket);
-                    if(result == 0)
+                    try
                     {
-                        DisconnectServer();
+                        // Pollを使って切断をチェック
+                        if (_socket.Poll(1000, SelectMode.SelectRead) && _socket.Available == 0)
+                        {
+                            Debug.WriteLine("Connection is dead");
+                            DisconnectServer();
+                            return;
+                        }
+
+                        Debug.WriteLine("Checking connection");
                     }
-                    ProcessData(_socket, packet.Data, packet.Type);
+                    catch
+                    {
+                        Debug.WriteLine("Connection is dead");
+                        DisconnectServer();
+                        return;
+                    }
                 }
-                await Task.Delay(10);
+                await Task.Delay(500);
             }
         }
     }

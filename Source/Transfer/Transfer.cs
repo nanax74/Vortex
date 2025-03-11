@@ -7,11 +7,10 @@ namespace Vortex
 {
     public static class Transfer
     {
-        public static async Task<int> SendAllAsync(Socket socket, byte[] data)
+        public static async Task<int> SendAllAsync(Socket socket, byte[] data, int size)
         {
             try
             {
-                int size = data.Length;
                 Debug.WriteLine("Sending: {0} bytes", size);
 
                 // データをすべて送信するまでループ
