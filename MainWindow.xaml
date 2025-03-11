@@ -4,122 +4,105 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Vortex"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Vortex" Height="540" Width="960">
     <Viewbox>
-        <Grid  Height="540" Width="960">
+        <Grid Height="540" Width="960">
             <TabControl>
-                <TabItem Header="Connect" FontSize="20">
-                    <Grid>
+                <TabControl.ItemContainerStyle>
+                    <Style TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
+                        <Setter Property="Height" Value="80"/>
+                    </Style>
+                </TabControl.ItemContainerStyle>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="Wifi" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Connection" FontSize="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="20">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="1*"/>
                             <RowDefinition Height="1*"/>
                             <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
-
-                        <!-- Server IP and Port inputs -->
                         <Grid Grid.Row="0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Label Content="Server IP:" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="36" Margin="10"/>
-                            <TextBox x:Name="ServerIpTextBox" Grid.Column="1" Text="192.168.68.115" FontSize="36" Margin="10" VerticalAlignment="Center"/>
+                            <TextBox Name="ServerIpTextBox" Text="192.168.68.115" FontSize="48" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="IP Address"/>
                         </Grid>
 
                         <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-
-                            <Label Content="Port:" Grid.Column="0" VerticalAlignment="Center" HorizontalAlignment="Left" FontSize="36" Margin="10"/>
-                            <TextBox x:Name="PortTextBox" Grid.Column="1" Text="10000" FontSize="36" Margin="10" VerticalAlignment="Center"/>
+                            <TextBox Name="PortTextBox" Text="10000" FontSize="48" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="Port"/>
                         </Grid>
-
-                        <!-- Buttons -->
                         <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-
-                            <Button Content="Connect" Grid.Column="0" Click="ConnectButton_Click" VerticalAlignment="Center" Margin="10" FontSize="36"/>
-                            <Button Content="Disconnect" Grid.Column="1" Click="DisconnectButton_Click" FontSize="36" VerticalAlignment="Center" Margin="10"/>
+                            <Button Grid.Column="0" Click="ConnectButton_Click" Margin="10" Height="100">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="LanConnect" Width="75" Height="75" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Connect" Margin="5" VerticalAlignment="Center" FontSize="48"/>
+                                </StackPanel>
+                            </Button>
+                            <Button Grid.Column="1" Click="DisconnectButton_Click" Margin="10" Height="100">
+                                <StackPanel Orientation="Horizontal">
+                                    <materialDesign:PackIcon Kind="LanDisconnect" Width="75" Height="75" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <TextBlock Text="Disonnect" Margin="5" VerticalAlignment="Center" FontSize="48"/>
+                                </StackPanel>
+                            </Button>
                         </Grid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Command" FontSize="20">
-                    <Grid>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="CodeTags" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Command" FontSize="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="20">
                         <Grid.RowDefinitions>
-                            <RowDefinition Height="*"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="3*"/>
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Label Content="Command:" Grid.Column="0" VerticalAlignment="Center" Margin="10" FontSize="24"/>
-                            <TextBox x:Name="CommandTextBox" Grid.Row="0" Margin="10" Grid.Column="1" FontSize="36"/>
+                            <TextBox Name="CommandTextBox" Text="" FontSize="36" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="Command"/>
                         </Grid>
                         <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="13*"/>
-                                <ColumnDefinition Width="86*"/>
-                            </Grid.ColumnDefinitions>
-                            <Button x:Name="CommandSendButton" Content="Send" Grid.Row="0" Click="CommandSendButton_Click" Margin="10,10,10,10" Grid.ColumnSpan="2"/>
+                            <Button x:Name="CommandSendButton" Content="Send" Grid.Row="0" Click="CommandSendButton_Click" Margin="5" FontSize="36" Height="80"/>
                         </Grid>
                         <Grid Grid.Row="2">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto"/>
-                                <RowDefinition Height="*"/>
-                            </Grid.RowDefinitions>
-                            <Label Content="Response" FontSize="24" Margin="10,0"/>
-                            <TextBox x:Name="ResponseTextBox" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" Margin="10,0"/>
+                            <TextBox x:Name="ResponseTextBox" FontSize="36" IsReadOnly="True" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5" materialDesign:HintAssist.Hint="Response"/>
                         </Grid>
                     </Grid>
                 </TabItem>
-                <TabItem Header="Memory Viewer" FontSize="20">
-                    <Grid>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="Memory" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Memory" FontSize="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="20">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Label Content="Address:" Grid.Column="0" VerticalAlignment="Center" Margin="10" FontSize="24"/>
-                            <TextBox x:Name="AddressTextBox" Grid.Row="0" Margin="10" Grid.Column="1" FontSize="36"/>
+                            <TextBox Name="AddressTextBox" Text="" FontSize="48" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="Address"/>
                         </Grid>
                         <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto"/>
-                                <ColumnDefinition Width="*"/>
-                            </Grid.ColumnDefinitions>
-                            <Label Content="Value:" Grid.Column="0" VerticalAlignment="Center" Margin="10" FontSize="24"/>
-                            <TextBox x:Name="ValueTextBox" Grid.Row="0" Margin="10" Grid.Column="1" FontSize="36"/>
+                            <TextBox Name="ValueTextBox" Text="" FontSize="48" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="Value"/>
                         </Grid>
-                        <Grid Grid.Row="2">
-                            <CheckBox Content="CheckBox" HorizontalAlignment="Center" VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" FontSize="20" UseLayoutRounding="False" RenderTransformOrigin="0.5,0.5">
-                                <CheckBox.RenderTransform>
-                                    <TransformGroup>
-                                        <ScaleTransform/>
-                                        <SkewTransform AngleY="-0.149"/>
-                                        <RotateTransform/>
-                                        <TranslateTransform Y="0.249"/>
-                                    </TransformGroup>
-                                </CheckBox.RenderTransform>
-                                <CheckBox.LayoutTransform>
-                                    <ScaleTransform ScaleX="3" ScaleY="3"/>
-                                </CheckBox.LayoutTransform>
-                            </CheckBox>
-                        </Grid>
+                        <CheckBox Grid.Row="2" Content="CheckBox" FontSize="24" HorizontalAlignment="Left" VerticalAlignment="Center" VerticalContentAlignment="Center" HorizontalContentAlignment="Center" Padding="4,-3,0,0">
+                            <CheckBox.LayoutTransform>
+                                <ScaleTransform ScaleX="2" ScaleY="2"/>
+                            </CheckBox.LayoutTransform>
+                        </CheckBox>
                     </Grid>
                 </TabItem>
             </TabControl>
