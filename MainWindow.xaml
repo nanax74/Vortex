@@ -49,7 +49,7 @@
                             <Button Grid.Column="1" Click="DisconnectButton_Click" Margin="10" Height="100">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="LanDisconnect" Width="75" Height="75" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Disonnect" Margin="5" VerticalAlignment="Center" FontSize="48"/>
+                                    <TextBlock Text="Disconnect" Margin="5" VerticalAlignment="Center" FontSize="48"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
