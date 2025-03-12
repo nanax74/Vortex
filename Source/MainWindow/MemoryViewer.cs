@@ -9,7 +9,7 @@ namespace Vortex
 {
     public partial class MainWindow : Window
     {
-        private CancellationTokenSource _ctsUpdateMemory;
+        private CancellationTokenSource? _ctsUpdateMemory;
 
         private async void AutoUpdateCheckBox_Checked(object sender, RoutedEventArgs e)
         {
