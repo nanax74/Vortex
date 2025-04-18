@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers.Binary;
 using System.Text.RegularExpressions;
 
 public static class ConvertEx
@@ -44,4 +45,31 @@ public static class ConvertEx
         }
         return Convert.ToUInt32(hex, 16);
     }
+
+    public static uint[] ToUInt32Array(byte[] data)
+    {
+        // 4の倍数になるように調整された長さを計算
+        int remainder = data.Length % 4; // 4で割った余り
+        int newLength = (remainder == 0) ? data.Length : data.Length + (4 - remainder);
+
+        // 0埋めされた新しいバイト配列を作成
+        byte[] newData = new byte[newLength];
+
+        // 元のデータをコピー（不足分はデフォルトの0のまま）
+        for (int i = 0; i < data.Length; i++)
+        {
+            newData[i] = data[i];
+        }
+
+        // uintの配列を作成し、4バイトごとに変換
+        uint[] result = new uint[newLength / 4];
+        for (int i = 0; i < result.Length; i++)
+        {
+            uint res = BitConverter.ToUInt32(newData, i * 4);
+            result[i] = BinaryPrimitives.ReverseEndianness(res);
+        }
+
+        return result;
+    }
+
 }

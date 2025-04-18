@@ -41,9 +41,11 @@ namespace Vortex
                     await sendPacket.SendPacketAsync(_socket);
 
                     Packet receivePacket = new Packet();
-                    await receivePacket.ReceivePacketAsync(_socket);
-
-                    ResponseTextBox.Text = BitConverter.ToString(receivePacket.Data).Replace("-", "");
+                    while(receivePacket.Type == Packet.DATA_TYPE_DATA)
+                    {
+                        await receivePacket.ReceivePacketAsync(_socket);
+                        ResponseTextBox.Text = BitConverter.ToString(receivePacket.Data).Replace("-", "");
+                    }
                 }
                 finally
                 {

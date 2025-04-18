@@ -7,19 +7,22 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         mc:Ignorable="d"
         Title="Vortex" Height="540" Width="960">
+    <Window.Resources>
+        <local:HexConverter x:Key="HexConverter"/>
+    </Window.Resources>
     <Viewbox>
         <Grid Height="540" Width="960">
             <TabControl>
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
-                        <Setter Property="Height" Value="80"/>
+                        <Setter Property="Height" Value="60"/>
                     </Style>
                 </TabControl.ItemContainerStyle>
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="Wifi" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <TextBlock Text="Connection" FontSize="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Connection" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </StackPanel>
                     </TabItem.Header>
                     <Grid Margin="20">
@@ -58,8 +61,8 @@
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <materialDesign:PackIcon Kind="CodeTags" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <TextBlock Text="Command" FontSize="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <materialDesign:PackIcon Kind="Terminal" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Command" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </StackPanel>
                     </TabItem.Header>
                     <Grid Margin="20">
@@ -83,26 +86,122 @@
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                             <materialDesign:PackIcon Kind="Memory" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                            <TextBlock Text="Memory" FontSize="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Memory" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </StackPanel>
                     </TabItem.Header>
                     <Grid Margin="20">
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
-                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- アドレス入力 -->
+                        <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBox Name="AddressTextBox"
+                            Width="300"
+                            FontSize="30"
+                            Padding="0"
+                            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                            materialDesign:HintAssist.Hint="Start Address"
+                            Margin="10"/>
+                        </StackPanel>
+
+                        <!-- メモリ表示 -->
+                        <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Padding="5">
+                            <DataGrid
+                            x:Name="MemoryDataGrid"
+                            FontSize="16"
+                            AutoGenerateColumns="False"
+                            Background="White"
+                            CanUserAddRows="False"
+                            CanUserSortColumns="False"
+                            CanUserResizeColumns="False"
+                            CanUserReorderColumns="False"
+                            ItemsSource="{Binding MemoryEntries}"
+                            GridLinesVisibility="All"
+                            RowHeight="36"
+                            HeadersVisibility="Column">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat={}{0:X8}}" IsReadOnly="True" Width="*" />
+                                    <DataGridTemplateColumn Header="Value" Width="*">
+                                        <DataGridTemplateColumn.CellTemplate>
+                                            <DataTemplate>
+                                                <TextBlock Text="{Binding Value, StringFormat={}{0:X8}}"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellTemplate>
+                                        <DataGridTemplateColumn.CellEditingTemplate>
+                                            <DataTemplate>
+                                                <TextBox Text="{Binding Value, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged, Converter={StaticResource HexConverter}}"
+                                                PreviewTextInput="HexOnly_PreviewTextInput"
+                                                CharacterCasing="Upper"
+                                                Padding="0"
+                                                MaxLength="8"
+                                                FontFamily="Consolas"/>
+                                            </DataTemplate>
+                                        </DataGridTemplateColumn.CellEditingTemplate>
+                                    </DataGridTemplateColumn>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+
+                        <!-- オートアップデート -->
+                        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0">
+                            <CheckBox Name="AutoUpdateCheckBox"
+                            Content="Auto Update"
+                            FontSize="20"
+                            Padding="4,0,0,0"
+                            Checked="AutoUpdateCheckBox_Checked"
+                            Unchecked="AutoUpdateCheckBox_Unchecked"/>
+                        </StackPanel>
+                    </Grid>
+                </TabItem>
+                <TabItem>
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <materialDesign:PackIcon Kind="Code" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Disassembler" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <Grid Margin="20">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <Grid Grid.Row="0">
-                            <TextBox Name="AddressTextBox" Text="" FontSize="48" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="Address"/>
-                        </Grid>
-                        <Grid Grid.Row="1">
-                            <TextBox Name="ValueTextBox" Text="" FontSize="48" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="Value"/>
-                        </Grid>
-                        <CheckBox Name="AutoUpdateCheckBox" Grid.Row="2" Content="Auto Update" Checked="AutoUpdateCheckBox_Checked" FontSize="24" VerticalContentAlignment="Stretch" HorizontalContentAlignment="Stretch" Padding="4,-4,0,0" HorizontalAlignment="Left" VerticalAlignment="Center" Unchecked="AutoUpdateCheckBox_Unchecked">
-                            <CheckBox.LayoutTransform>
-                                <ScaleTransform ScaleX="2" ScaleY="2"/>
-                            </CheckBox.LayoutTransform>
-                        </CheckBox>
+
+                        <!-- アドレス入力とボタン -->
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBox Name="DisasmAddressTextBox"
+                                Width="300"
+                                FontSize="30"
+                                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                materialDesign:HintAssist.Hint="Start Address"
+                                Margin="10"/>
+                        </StackPanel>
+
+                        <!-- DataGrid: 命令リスト -->
+                        <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Padding="5">
+                            <DataGrid x:Name="DisasmDataGrid"
+                                FontSize="12"
+                                AutoGenerateColumns="False"
+                                Background="White"
+                                CanUserAddRows="False"
+                                CanUserSortColumns="False"
+                                CanUserResizeColumns="False"
+                                CanUserReorderColumns="False"
+                                ItemsSource="{Binding MemoryEntries}"
+                                GridLinesVisibility="All"
+                                RowHeight="32"
+                                HeadersVisibility="Column">
+                                <DataGrid.Columns>
+                                    <DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat={}{0:X8}}" Width="*" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Value" Binding="{Binding Bytes}" Width="*" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Instruction" Binding="{Binding Mnemonic}" Width="*" IsReadOnly="True"/>
+                                    <DataGridTextColumn Header="Operands" Binding="{Binding Operands}" Width="*" IsReadOnly="True"/>
+                                </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
                     </Grid>
                 </TabItem>
             </TabControl>
