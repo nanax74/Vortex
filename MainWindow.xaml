@@ -9,6 +9,10 @@
         Title="Vortex" Height="540" Width="960">
     <Window.Resources>
         <local:HexConverter x:Key="HexConverter"/>
+        <!-- ボタンのデフォルトスタイル -->
+        <Style TargetType="Button" BasedOn="{StaticResource MaterialDesignFlatMidBgButton}">
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
     </Window.Resources>
     <Viewbox>
         <Grid Height="540" Width="960">
@@ -43,15 +47,35 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="*"/>
                             </Grid.ColumnDefinitions>
-                            <Button Grid.Column="0" Click="ConnectButton_Click" Margin="10" Height="100">
+
+                            <Button x:Name="ConnectButton"
+                            Grid.Column="0"
+                            Click="ConnectButton_Click"
+                            Margin="10"
+                            Height="100"
+                            Background="Green"
+                            Foreground="White">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="LanConnect" Width="75" Height="75" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <materialDesign:PackIcon Kind="LanConnect"
+                                 Width="75" Height="75"
+                                 Foreground="White"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     <TextBlock Text="Connect" Margin="5" VerticalAlignment="Center" FontSize="48"/>
                                 </StackPanel>
                             </Button>
-                            <Button Grid.Column="1" Click="DisconnectButton_Click" Margin="10" Height="100">
+                            <Button x:Name="DisconnectButton"
+                            Grid.Column="1"
+                            Click="DisconnectButton_Click"
+                            Margin="10"
+                            Height="100"
+                            Background="Gray"
+                            Foreground="White"
+                            IsEnabled="False">
                                 <StackPanel Orientation="Horizontal">
-                                    <materialDesign:PackIcon Kind="LanDisconnect" Width="75" Height="75" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    <materialDesign:PackIcon Kind="LanDisconnect"
+                                 Width="75" Height="75"
+                                 Foreground="White"
+                                 HorizontalAlignment="Center" VerticalAlignment="Center"/>
                                     <TextBlock Text="Disconnect" Margin="5" VerticalAlignment="Center" FontSize="48"/>
                                 </StackPanel>
                             </Button>
