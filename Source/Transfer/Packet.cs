@@ -10,11 +10,11 @@ namespace Vortex
     {
         public const int DATA_TYPE_DATA = 0x00; // コマンドや応答
         public const int DATA_TYPE_PROGRESS = 0x01; // 進捗
-        public const int DATA_TYPE_NULL = 0xFF; // 空のデータ
+        public const int DATA_TYPE_ERROR = 0xFF; // 空のデータ
 
         private const int MaxPacketSize = 1024 * 1024;
         public byte[] Data { get; set; } = Array.Empty<byte>();
-        public int Type { get; set; } = DATA_TYPE_NULL;
+        public int Type { get; set; } = DATA_TYPE_ERROR;
 
         public Packet() { }
 

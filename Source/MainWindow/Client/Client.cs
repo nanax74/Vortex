@@ -12,31 +12,51 @@ namespace Vortex
 {
     public partial class MainWindow : Window
     {
+        private bool _isConnecting = false;
+
         private async Task ConnectToServer()
         {
+            if (_isConnecting) return;
+
             // IPアドレスとポートを取得
             string serverIp = ServerIpTextBox.Text;
             int port = int.Parse(PortTextBox.Text);
 
             try
             {
+                _isConnecting = true;
+
                 // 接続されていなかったら接続を試みる
                 if (_socket == null || !_socket.Connected)
                 {
                     _socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    await _socket.ConnectAsync(serverIp, port);
+                    // タイムアウト3秒で接続を試みる
+                    using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(3)))
+                    {
+                        UpdateConnectButtonState(ConnectionState.Connecting);
+                        await _socket.ConnectAsync(serverIp, port, cts.Token);
+                    }
                     _socket.NoDelay = true; // 遅延を緩和
 
-                    UpdateConnectButtonState(true);
+                    UpdateConnectButtonState(ConnectionState.Connected);
 
                     // キャンセルトークンを生成して、無限ループを管理
                     _ctsDisconnect = new CancellationTokenSource();
                     await Task.Run(() => CheckConnection(_ctsDisconnect.Token));
                 }
             }
+            catch (OperationCanceledException)
+            {
+                UpdateConnectButtonState(ConnectionState.Disconnected);
+                MessageBox.Show("接続がタイムアウトしました（3秒以内に応答なし）");
+            }
             catch (Exception ex)
             {
                 MessageBox.Show($"Connection error: {ex.Message}");
+            }
+            finally
+            {
+                _isConnecting = false;
             }
         }
 
@@ -52,7 +72,9 @@ namespace Vortex
                 _socket.Close();
                 _socket = null;
 
-                UpdateConnectButtonState(false);
+                UpdateConnectButtonState(ConnectionState.Disconnected);
+
+                Debug.Write("Disconnection is done");
             }
         }
 
@@ -71,8 +93,6 @@ namespace Vortex
                             DisconnectFromServer();
                             return;
                         }
-
-                        Debug.WriteLine("Checking connection");
                     }
                     catch
                     {
@@ -85,24 +105,36 @@ namespace Vortex
             }
         }
 
-        private void UpdateConnectButtonState(bool connected)
+        private void UpdateConnectButtonState(ConnectionState connectionState)
         {
-            if (connected)
+            switch (connectionState)
             {
-                ConnectButton.IsEnabled = false;
-                ConnectButton.Background = Brushes.Gray;
-
-                DisconnectButton.IsEnabled = true;
-                DisconnectButton.Background = Brushes.Red;
+                case ConnectionState.Connecting:
+                    ConnectButton.IsEnabled = false;
+                    ConnectButton.Background = Brushes.Gray;
+                    DisconnectButton.IsEnabled = false;
+                    DisconnectButton.Background = Brushes.Gray;
+                    break;
+                case ConnectionState.Connected:
+                    ConnectButton.IsEnabled = false;
+                    ConnectButton.Background = Brushes.Gray;
+                    DisconnectButton.IsEnabled = true;
+                    DisconnectButton.Background = Brushes.Red;
+                    break;
+                case ConnectionState.Disconnected:
+                    ConnectButton.IsEnabled = true;
+                    ConnectButton.Background = Brushes.Green;
+                    DisconnectButton.IsEnabled = false;
+                    DisconnectButton.Background = Brushes.Gray;
+                    break;
             }
-            else
-            {
-                ConnectButton.IsEnabled = true;
-                ConnectButton.Background = Brushes.Green;
+        }
 
-                DisconnectButton.IsEnabled = false;
-                DisconnectButton.Background = Brushes.Gray;
-            }
+        private enum ConnectionState
+        {
+            Connecting,
+            Connected,
+            Disconnected,
         }
     }
 }

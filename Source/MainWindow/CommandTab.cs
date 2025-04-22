@@ -31,7 +31,10 @@ namespace Vortex
             try
             {
                 // 他の送信が完了するまで待つ (ロック)
-                Debug.WriteLine("Waiting for send lock");
+                if (_sendLockCommand.CurrentCount == 0)
+                {
+                    Debug.WriteLine("Waiting for send lock");
+                }
                 await _sendLockCommand.WaitAsync();
 
                 try
@@ -41,10 +44,30 @@ namespace Vortex
                     await sendPacket.SendPacketAsync(_socket);
 
                     Packet receivePacket = new Packet();
-                    while(receivePacket.Type == Packet.DATA_TYPE_DATA)
+                    while (true)
                     {
                         await receivePacket.ReceivePacketAsync(_socket);
-                        ResponseTextBox.Text = BitConverter.ToString(receivePacket.Data).Replace("-", "");
+                        switch (receivePacket.Type)
+                        {
+                            case Packet.DATA_TYPE_DATA:
+                                ResponseTextBox.Text = BitConverter.ToString(receivePacket.Data).Replace("-", "");
+                                break;
+
+                            case Packet.DATA_TYPE_PROGRESS:
+                                ProgressTextBox.Text = BitConverter.ToString(receivePacket.Data).Replace("-", "");
+                                continue;
+
+                            case Packet.DATA_TYPE_ERROR:
+                                Debug.WriteLine("Received packet is null");
+                                ResponseTextBox.Text = "NULL";
+                                break;
+
+                            default:
+                                Debug.WriteLine($"Type of received packet is unknown: {receivePacket.Type}");
+                                ResponseTextBox.Text = "UNKNOWN";
+                                break;
+                        }
+                        break; // DATA, NULL, UNKNOWN のときはループ終了
                     }
                 }
                 finally

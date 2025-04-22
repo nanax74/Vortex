@@ -22,6 +22,7 @@
                         <Setter Property="Height" Value="60"/>
                     </Style>
                 </TabControl.ItemContainerStyle>
+                <!-- コネクトタブ -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -36,11 +37,25 @@
                             <RowDefinition Height="1*"/>
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
-                            <TextBox Name="ServerIpTextBox" FontSize="48" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="IP Address" Text="192.168.68.115"/>
+                            <TextBox
+                            Name="ServerIpTextBox"
+                            FontSize="48"
+                            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            materialDesign:HintAssist.Hint="IP Address"
+                            Text="192.168.68.115"/>
                         </Grid>
 
                         <Grid Grid.Row="1">
-                            <TextBox Name="PortTextBox" FontSize="48" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="Port" Text="10000"/>
+                            <TextBox
+                            Name="PortTextBox"
+                            FontSize="48"
+                            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            materialDesign:HintAssist.Hint="Port"
+                            Text="10000"/>
                         </Grid>
                         <Grid Grid.Row="2">
                             <Grid.ColumnDefinitions>
@@ -82,6 +97,7 @@
                         </Grid>
                     </Grid>
                 </TabItem>
+                <!-- コマンドタブ -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -93,19 +109,50 @@
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
                             <RowDefinition Height="3*"/>
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
-                            <TextBox Name="CommandTextBox" Text="" FontSize="36" Style="{StaticResource MaterialDesignFloatingHintTextBox}" Margin="5" VerticalAlignment="Center" materialDesign:HintAssist.Hint="Command"/>
+                            <TextBox
+                                Name="CommandTextBox"
+                                FontSize="32"
+                                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                                Margin="5"
+                                VerticalAlignment="Center"
+                                materialDesign:HintAssist.Hint="Command"/>
                         </Grid>
                         <Grid Grid.Row="1">
-                            <Button x:Name="CommandSendButton" Content="Send" Grid.Row="0" Click="CommandSendButton_Click" Margin="5" FontSize="36" Height="80"/>
+                            <Button x:Name="CommandSendButton" Content="Send" Grid.Row="0" Click="CommandSendButton_Click" Margin="5" FontSize="32" Height="80"/>
                         </Grid>
                         <Grid Grid.Row="2">
-                            <TextBox x:Name="ResponseTextBox" FontSize="36" IsReadOnly="True" Style="{StaticResource MaterialDesignOutlinedTextBox}" Margin="5" materialDesign:HintAssist.Hint="Response" UseLayoutRounding="True" HorizontalContentAlignment="Left" VerticalContentAlignment="Top"/>
+                            <TextBox
+                            x:Name="ProgressTextBox"
+                            FontSize="32" IsReadOnly="True"
+                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                            Margin="5"
+                            Padding="10,0"
+                            materialDesign:HintAssist.Hint="Progress"
+                            UseLayoutRounding="True" HorizontalContentAlignment="Left"
+                            VerticalContentAlignment="Center"
+                            materialDesign:HintAssist.IsFloating="False"/>
+                        </Grid>
+                        <Grid Grid.Row="3">
+                            <TextBox
+                            x:Name="ResponseTextBox"
+                            FontSize="32"
+                            IsReadOnly="True"
+                            Style="{StaticResource MaterialDesignOutlinedTextBox}"
+                            Margin="5"
+                            Padding="10,10"
+                            materialDesign:HintAssist.Hint="Response"
+                            UseLayoutRounding="True"
+                            HorizontalContentAlignment="Left"
+                            VerticalContentAlignment="Top"
+                            materialDesign:HintAssist.IsFloating="False"/>
                         </Grid>
                     </Grid>
                 </TabItem>
+                <!-- メモリータブ -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -119,8 +166,6 @@
                             <RowDefinition Height="*"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-
-                        <!-- アドレス入力 -->
                         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
                             <TextBox Name="AddressTextBox"
                             Width="300"
@@ -130,8 +175,6 @@
                             materialDesign:HintAssist.Hint="Start Address"
                             Margin="10"/>
                         </StackPanel>
-
-                        <!-- メモリ表示 -->
                         <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Padding="5">
                             <DataGrid
                             x:Name="MemoryDataGrid"
@@ -168,8 +211,6 @@
                                 </DataGrid.Columns>
                             </DataGrid>
                         </Border>
-
-                        <!-- オートアップデート -->
                         <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10,0">
                             <CheckBox Name="AutoUpdateCheckBox"
                             Content="Auto Update"
@@ -180,6 +221,7 @@
                         </StackPanel>
                     </Grid>
                 </TabItem>
+                <!-- ディスアセンブラタブ -->
                 <TabItem>
                     <TabItem.Header>
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -193,8 +235,6 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-
-                        <!-- アドレス入力とボタン -->
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
                             <TextBox Name="DisasmAddressTextBox"
                                 Width="300"
@@ -203,8 +243,6 @@
                                 materialDesign:HintAssist.Hint="Start Address"
                                 Margin="10"/>
                         </StackPanel>
-
-                        <!-- DataGrid: 命令リスト -->
                         <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Padding="5">
                             <DataGrid x:Name="DisasmDataGrid"
                                 FontSize="12"
