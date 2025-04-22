@@ -47,24 +47,36 @@ namespace Vortex
                     while (true)
                     {
                         await receivePacket.ReceivePacketAsync(_socket);
+                        string response = BitConverter.ToString(receivePacket.Data).Replace("-", "");
                         switch (receivePacket.Type)
                         {
                             case Packet.DATA_TYPE_DATA:
-                                ResponseTextBox.Text = BitConverter.ToString(receivePacket.Data).Replace("-", "");
+                                ResponseTextBox.Text = response;
                                 break;
 
                             case Packet.DATA_TYPE_PROGRESS:
-                                ProgressTextBox.Text = BitConverter.ToString(receivePacket.Data).Replace("-", "");
+                                ProgressTextBox.Text = response;
                                 continue;
 
                             case Packet.DATA_TYPE_ERROR:
-                                Debug.WriteLine("Received packet is null");
-                                ResponseTextBox.Text = "NULL";
+                                uint errorCode = ConvertEx.ToUInt32(response);
+                                string errorMessage = errorCode switch
+                                {
+                                    0 => "Invalid command",
+                                    1 => "Invalid address",
+                                    2 => "Too Long Data",
+                                    3 => "Empty Data",
+                                    4 => "Invalid ValueType",
+                                    _ => $"Unknown error: {errorCode}"
+                                };
+
+                                Debug.WriteLine($"Response error:{errorMessage}");
+                                ResponseTextBox.Text = $"Error({errorMessage})";
                                 break;
 
                             default:
                                 Debug.WriteLine($"Type of received packet is unknown: {receivePacket.Type}");
-                                ResponseTextBox.Text = "UNKNOWN";
+                                ResponseTextBox.Text = "Unknown";
                                 break;
                         }
                         break; // DATA, NULL, UNKNOWN のときはループ終了
