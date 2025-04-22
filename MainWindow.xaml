@@ -15,7 +15,7 @@
     </Window.Resources>
     <Viewbox>
         <Grid Height="540" Width="960">
-            <TabControl>
+            <TabControl Name="MainTab">
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
                         <Setter Property="Height" Value="60"/>
@@ -227,7 +227,7 @@
                         </StackPanel>
                         <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Padding="5">
                             <DataGrid x:Name="DisasmDataGrid"
-                                FontSize="12"
+                                FontSize="16"
                                 AutoGenerateColumns="True"
                                 Background="White"
                                 ColumnWidth="*"
@@ -237,7 +237,7 @@
                                 CanUserResizeColumns="False"
                                 CanUserReorderColumns="False"
                                 GridLinesVisibility="All"
-                                RowHeight="32"
+                                RowHeight="36"
                                 HeadersVisibility="Column">
                             </DataGrid>
                         </Border>

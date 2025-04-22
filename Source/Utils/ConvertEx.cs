@@ -74,11 +74,9 @@ public static class ConvertEx
 
     public static byte[] ReverseEndian(byte[] data, int blockSize)
     {
-        if (blockSize <= 0)
-            throw new ArgumentException("blockSize は正の整数である必要があります。");
+        if (blockSize <= 0) return Array.Empty<byte>();
 
-        if (data.Length % blockSize != 0)
-            throw new ArgumentException("配列の長さは blockSize の倍数である必要があります。");
+        if (data.Length % blockSize != 0) return Array.Empty<byte>();
 
         byte[] result = new byte[data.Length];
 

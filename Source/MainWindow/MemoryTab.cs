@@ -25,7 +25,11 @@ namespace Vortex
 
         private void MemoryDataGrid_Loaded(object sender, RoutedEventArgs e)
         {
-            GenerateMemoryCell(memoryColumnCount, memoryRowCount);
+            var table = GetMemoryTable();
+            if (table == null || table.Columns.Count - 1 != memoryColumnCount || table.Rows.Count != memoryRowCount)
+            {
+                GenerateMemoryCell(memoryColumnCount, memoryRowCount);
+            }
         }
 
         private async void AutoUpdateCheckBox_Checked(object sender, RoutedEventArgs e)
@@ -40,6 +44,17 @@ namespace Vortex
         private void AutoUpdateCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             _ctsUpdateMemory?.Cancel();
+        }
+
+        // MemoryTabが選択されているかどうかをチェックするメソッド
+        private bool IsMemoryTabSelected()
+        {
+            bool flag = false;
+            Dispatcher.Invoke(() =>
+            {
+                flag = MainTab.SelectedItem == MemoryTab;
+            });
+            return flag;
         }
 
         private void GenerateMemoryCell(int columnCount, int rowCount)
@@ -69,21 +84,37 @@ namespace Vortex
             {
                 while (!tokenDisconnect.IsCancellationRequested && !tokenUpdateMemory.IsCancellationRequested)
                 {
-                    uint address = 0;
-                    Dispatcher.Invoke(() =>
+                    if (IsMemoryTabSelected())
                     {
-                        address = ConvertEx.ToUInt32(AddressTextBox.Text);
-                    });
+                        uint address = 0;
+                        Dispatcher.Invoke(() =>
+                        {
+                            address = ConvertEx.ToUInt32(AddressTextBox.Text);
+                        });
 
-                    Debug.WriteLine($"Address: {address:X8}");
+                        Debug.WriteLine($"Address: {address:X8}");
 
-                    uint[] result = await Command.ReadUInt32s(_socket, address, memoryRowCount * 4);
+                        uint[] result = await Command.ReadUInt32s(_socket, address, memoryRowCount * 4);
 
-                    UpdateMemoryCells(address, result);
-
+                        UpdateMemoryCells(address, result);
+                    }
                     await Task.Delay(10); // 更新間隔を調整
                 }
             }
+        }
+
+        private DataTable? GetMemoryTable()
+        {
+            DataTable? table = null;
+            // UIスレッドで一括更新
+            Dispatcher.Invoke(() =>
+            {
+                if (MemoryDataGrid.ItemsSource is DataView dataView)
+                {
+                    table = dataView.Table;
+                }
+            });
+            return table;
         }
 
         private void UpdateMemoryCells(uint address, uint[] result)
@@ -91,33 +122,29 @@ namespace Vortex
             // UIスレッドで一括更新
             Dispatcher.Invoke(() =>
             {
-                if (MemoryDataGrid.ItemsSource is DataView dataView)
+                var table = GetMemoryTable();
+                if (table != null)
                 {
-                    var table = dataView.Table;
-                    if (table != null)
+                    int rowCount = table.Rows.Count;
+
+                    for (int row = 0; row < rowCount; row++)
                     {
-                        int rowCount = table.Rows.Count;
+                        table.Rows[row][0] = $"{address + (uint)(row * 4 * memoryColumnCount):X8}"; // アドレスを更新
 
-                        for (int row = 0; row < rowCount; row++)
+                        for (int col = 0; col < memoryColumnCount; col++)
                         {
-                            table.Rows[row][0] = $"{address + (uint)(row * 4 * memoryColumnCount):X8}"; // アドレスを更新
-
-                            for (int col = 0; col < memoryColumnCount; col++)
+                            int index = row * memoryColumnCount + col;
+                            if (index < result.Length)
                             {
-                                int index = row * memoryColumnCount + col;
-                                if (index < result.Length)
-                                {
-                                    table.Rows[row][col + 1] = $"{result[index]:X8}";
-                                }
-                                else
-                                {
-                                    table.Rows[row][col + 1] = "--------"; // データがない場合の埋め
-                                }
+                                table.Rows[row][col + 1] = $"{result[index]:X8}";
+                            }
+                            else
+                            {
+                                table.Rows[row][col + 1] = "--------"; // データがない場合の埋め
                             }
                         }
                     }
                 }
-
             });
         }
 

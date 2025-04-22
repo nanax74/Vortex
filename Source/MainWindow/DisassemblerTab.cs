@@ -19,12 +19,16 @@ namespace Vortex
         private int disasmRowCount = 0x100;
         private void DisasmDataGrid_Loaded(object sender, RoutedEventArgs e)
         {
-            GenerateDisassemblerCell(disasmRowCount);
+            var table = GetDisasmTable();
+            if (table == null || table.Rows.Count != disasmRowCount)
+            {
+                GenerateDisassemblerCell(disasmRowCount);
+            }
         }
 
         private void DisasmAddressTextBox_KeyDown(object sender, KeyEventArgs e)
         {
-            if(e.Key == Key.Enter)
+            if (e.Key == Key.Enter)
             {
                 UpdateDisassembler();
             }
@@ -35,6 +39,7 @@ namespace Vortex
             DataTable table = new DataTable();
 
             // 列の追加
+            table.Columns.Add($"Symbol", typeof(string));  // 文字列型の列
             table.Columns.Add($"Address", typeof(string));  // 文字列型の列
             table.Columns.Add($"Binary Code", typeof(string));  // 文字列型の列
             table.Columns.Add($"Instruction", typeof(string));  // 文字列型の列
@@ -51,7 +56,7 @@ namespace Vortex
 
         private async void UpdateDisassembler()
         {
-            if(_socket == null || !_socket.Connected)
+            if (_socket == null || !_socket.Connected)
             {
                 MessageBox.Show("Not connected to server");
                 return;
@@ -64,23 +69,37 @@ namespace Vortex
             UpdateDisassemblerCells(binaryCode, address);
         }
 
+        private DataTable? GetDisasmTable()
+        {
+            DataTable? table = null;
+            // UIスレッドで一括更新
+            Dispatcher.Invoke(() =>
+            {
+                if (DisasmDataGrid.ItemsSource is DataView dataView)
+                {
+                    table = dataView.Table;
+                }
+            });
+            return table;
+        }
+
         private void UpdateDisassemblerCells(byte[] binaryCode, uint address)
         {
-            if (DisasmDataGrid.ItemsSource is DataView dataView)
+            var table = GetDisasmTable();
+
+            if (table == null)
             {
-                var table = dataView.Table;
+                Debug.WriteLine("Disassembler table is null");
+                return;
+            }
 
-                if(table == null)
-                {
-                    Debug.WriteLine("Disassembler table is null");
-                    return;
-                }
+            var disassembler = CapstoneDisassembler.CreatePowerPcDisassembler(PowerPcDisassembleMode.Bit32);
+            disassembler.EnableInstructionDetails = true; // これを入れるのがベスト
 
-                var disassembler = CapstoneDisassembler.CreatePowerPcDisassembler(PowerPcDisassembleMode.Bit32);
-                disassembler.EnableInstructionDetails = true; // これを入れるのがベスト
-
-                int i = 0;
-                while (i < binaryCode.Length)
+            int i = 0;
+            while (i < disasmRowCount * 4)
+            {
+                if (binaryCode.Length >= i + 4)
                 {
                     // 4バイトを1命令として逆アセンブルを行う
                     var instructionBytes = binaryCode.Skip(i).Take(4).ToArray();
@@ -89,18 +108,18 @@ namespace Vortex
 
                     int index = i / 4;
 
-                    table.Rows[index][0] = $"{(address + (uint)i):X8}"; // アドレスを更新
-                    table.Rows[index][1] = binaryString; // バイナリコードを更新
+                    table.Rows[index][1] = $"{(address + (uint)i):X8}"; // アドレスを更新
+                    table.Rows[index][2] = binaryString; // バイナリコードを更新
 
                     if (BitConverter.ToUInt32(instructionBytes, 0) == 0)
                     {
-                        table.Rows[index][2] = "null";
+                        table.Rows[index][3] = "null";
 
                     }
                     else if (instruction.Length == 0)
                     {
                         uint value = BitConverter.ToUInt32(instructionBytes, 0);
-                        table.Rows[index][2] = $".long 0x{value:X8}";
+                        table.Rows[index][3] = $".long 0x{value:X8}";
                     }
                     else
                     {
@@ -111,12 +130,19 @@ namespace Vortex
                         string operands = ins.Operand.ToString();
                         operands = Regex.Replace(operands, @"[a-f]", m => m.Value.ToUpper());
 
-                        table.Rows[index][2] = $"{ins.Mnemonic} {operands}";
+                        table.Rows[index][3] = $"{ins.Mnemonic} {operands}";
                     }
-
-                    // 1命令分進める
-                    i += 4;
                 }
+                else
+                {
+                    // バイナリコードが不足している場合は空白を設定
+                    int index = i / 4;
+                    table.Rows[index][0] = $"{(address + (uint)i):X8}"; // アドレスを更新
+                    table.Rows[index][1] = "--------";
+                    table.Rows[index][2] = "None";
+                }
+                // 1命令分進める
+                i += 4;
             }
         }
     }
