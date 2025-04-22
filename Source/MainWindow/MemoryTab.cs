@@ -2,79 +2,31 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Xml.Linq;
+using static MaterialDesignThemes.Wpf.Theme;
 
 namespace Vortex
 {
-    public class MemoryEntry : INotifyPropertyChanged
-    {
-        private uint _address;
-        private uint _value;
-
-        public uint Address
-        {
-            get => _address;
-            set
-            {
-                if (_address != value)
-                {
-                    _address = value;
-                    OnPropertyChanged(nameof(Address));
-                }
-            }
-        }
-
-        public uint Value
-        {
-            get => _value;
-            set
-            {
-                if (_value != value)
-                {
-                    _value = value;
-                    OnPropertyChanged(nameof(Value));
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected void OnPropertyChanged(string propName)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propName));
-        }
-    }
-
-    public class MemoryViewModel
-    {
-        public ObservableCollection<MemoryEntry> MemoryEntries { get; set; }
-
-        public MemoryViewModel()
-        {
-            MemoryEntries = new ObservableCollection<MemoryEntry>();
-
-            // 0x100 (256) 個の空エントリを作成
-            for (int i = 0; i < 0x100; i++)
-            {
-                MemoryEntries.Add(new MemoryEntry
-                {
-                    Address = (uint)(0x10000000 + i * 4), // 例: 0x10000000 から4バイト間隔で
-                    Value = 0
-                });
-            }
-        }
-    }
-
     public partial class MainWindow : Window
     {
         private CancellationTokenSource? _ctsUpdateMemory;
+
+        int memoryColumnCount = 4;
+        int memoryRowCount = 0x100;
+
+        private void MemoryDataGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            GenerateMemoryCell(memoryColumnCount, memoryRowCount);
+        }
 
         private async void AutoUpdateCheckBox_Checked(object sender, RoutedEventArgs e)
         {
@@ -88,6 +40,27 @@ namespace Vortex
         private void AutoUpdateCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
             _ctsUpdateMemory?.Cancel();
+        }
+
+        private void GenerateMemoryCell(int columnCount, int rowCount)
+        {
+            DataTable table = new DataTable();
+
+            // 列の追加
+            table.Columns.Add($"Address", typeof(string));  // 文字列型の列
+            for (int col = 0; col < columnCount; col++)
+            {
+                table.Columns.Add($"+{(col * 4):X}", typeof(string));  // 文字列型の列
+            }
+
+            // 行の追加
+            for (int row = 0; row < rowCount; row++)
+            {
+                table.Rows.Add(table.NewRow());
+            }
+
+            // DataGrid にバインド
+            MemoryDataGrid.ItemsSource = table.DefaultView;
         }
 
         private async Task UpdateMemory(CancellationToken tokenDisconnect, CancellationToken tokenUpdateMemory)
@@ -104,22 +77,48 @@ namespace Vortex
 
                     Debug.WriteLine($"Address: {address:X8}");
 
-                    uint[] result = await Command.ReadUInt32(_socket, address, 0x400);
+                    uint[] result = await Command.ReadUInt32(_socket, address, memoryRowCount * 4);
 
-                    // UIスレッドで一括更新
-                    Dispatcher.Invoke(() =>
-                    {
-                        // バックグラウンドでデータを準備
-                        for (int i = 0; i < result.Length; i++)
-                        {
-                            viewModel.MemoryEntries[i].Address = address + (uint)(i * 4);
-                            viewModel.MemoryEntries[i].Value = result[i];
-                        }
-                    });
+                    UpdateMemoryCells(address, result);
 
                     await Task.Delay(10); // 更新間隔を調整
                 }
             }
+        }
+
+        private void UpdateMemoryCells(uint address, uint[] result)
+        {
+            // UIスレッドで一括更新
+            Dispatcher.Invoke(() =>
+            {
+                if (MemoryDataGrid.ItemsSource is DataView dataView)
+                {
+                    DataTable? table = dataView.Table;
+                    if (table != null)
+                    {
+                        int rowCount = table.Rows.Count;
+
+                        for (int row = 0; row < rowCount; row++)
+                        {
+                            table.Rows[row][0] = $"{address + (uint)(row * 4 * memoryColumnCount):X8}"; // アドレスを更新
+
+                            for (int col = 0; col < memoryColumnCount; col++)
+                            {
+                                int index = row * memoryColumnCount + col;
+                                if (index < result.Length)
+                                {
+                                    table.Rows[row][col + 1] = $"{result[index]:X8}";
+                                }
+                                else
+                                {
+                                    table.Rows[row][col + 1] = "--------"; // データがない場合の埋め
+                                }
+                            }
+                        }
+                    }
+                }
+
+            });
         }
 
         private void HexOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)

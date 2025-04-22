@@ -14,6 +14,11 @@ namespace Vortex
     {
         private bool _isConnecting = false;
 
+        private void ConnectTabInit()
+        {
+            EnableTabPages(false);
+        }
+
         private async Task ConnectToServer()
         {
             if (_isConnecting) return;
@@ -120,14 +125,23 @@ namespace Vortex
                     ConnectButton.Background = Brushes.Gray;
                     DisconnectButton.IsEnabled = true;
                     DisconnectButton.Background = Brushes.Red;
+                    EnableTabPages(true);
                     break;
                 case ConnectionState.Disconnected:
                     ConnectButton.IsEnabled = true;
                     ConnectButton.Background = Brushes.Green;
                     DisconnectButton.IsEnabled = false;
                     DisconnectButton.Background = Brushes.Gray;
+                    EnableTabPages(false);
                     break;
             }
+        }
+
+        private void EnableTabPages(bool enabled)
+        {
+            CommandTab.IsEnabled = enabled;
+            MemoryTab.IsEnabled = enabled;
+            DisassemblerTab.IsEnabled = enabled;
         }
 
         private enum ConnectionState

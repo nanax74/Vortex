@@ -9,7 +9,7 @@ namespace Vortex
 {
     public static class Command
     {
-        static public async Task<uint[]> ReadUInt32(Socket socket, uint address, uint size)
+        static public async Task<uint[]> ReadUInt32(Socket socket, uint address, int size)
         {
             string command = string.Format(string.Format("00{0:X8}{1:X8}", address, size));
             byte[] dataInput = ConvertEx.ToBytes(command);
