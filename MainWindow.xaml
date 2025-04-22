@@ -228,22 +228,17 @@
                         <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Padding="5">
                             <DataGrid x:Name="DisasmDataGrid"
                                 FontSize="12"
-                                AutoGenerateColumns="False"
+                                AutoGenerateColumns="True"
                                 Background="White"
+                                ColumnWidth="*"
+                                IsReadOnly="True"
                                 CanUserAddRows="False"
                                 CanUserSortColumns="False"
                                 CanUserResizeColumns="False"
                                 CanUserReorderColumns="False"
-                                ItemsSource="{Binding MemoryEntries}"
                                 GridLinesVisibility="All"
                                 RowHeight="32"
                                 HeadersVisibility="Column">
-                                <DataGrid.Columns>
-                                    <DataGridTextColumn Header="Address" Binding="{Binding Address, StringFormat={}{0:X8}}" Width="*" IsReadOnly="True"/>
-                                    <DataGridTextColumn Header="Value" Binding="{Binding Bytes}" Width="*" IsReadOnly="True"/>
-                                    <DataGridTextColumn Header="Instruction" Binding="{Binding Mnemonic}" Width="*" IsReadOnly="True"/>
-                                    <DataGridTextColumn Header="Operands" Binding="{Binding Operands}" Width="*" IsReadOnly="True"/>
-                                </DataGrid.Columns>
                             </DataGrid>
                         </Border>
                     </Grid>

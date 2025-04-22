@@ -9,7 +9,7 @@ namespace Vortex
 {
     public static class Command
     {
-        static public async Task<uint[]> ReadUInt32(Socket socket, uint address, int size)
+        static public async Task<byte[]> ReadBytes(Socket socket, uint address, int size)
         {
             string command = string.Format(string.Format("00{0:X8}{1:X8}", address, size));
             byte[] dataInput = ConvertEx.ToBytes(command);
@@ -17,7 +17,17 @@ namespace Vortex
             await sendPacket.SendPacketAsync(socket);
             Packet receivePacket = new Packet();
             await receivePacket.ReceivePacketAsync(socket);
-            return ConvertEx.ToUInt32Array(receivePacket.Data);
+            return receivePacket.Data;
+        }
+
+        static public async Task<byte[]> ReadBytesBigEndian(Socket socket, uint address, int size)
+        {
+            return ConvertEx.ReverseEndian(await ReadBytes(socket, address, size), 4);
+        }
+
+        static public async Task<uint[]> ReadUInt32s(Socket socket, uint address, int size)
+        {
+            return ConvertEx.ToUInt32Array(await ReadBytes(socket, address, size));
         }
     }
 }

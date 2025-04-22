@@ -77,7 +77,7 @@ namespace Vortex
 
                     Debug.WriteLine($"Address: {address:X8}");
 
-                    uint[] result = await Command.ReadUInt32(_socket, address, memoryRowCount * 4);
+                    uint[] result = await Command.ReadUInt32s(_socket, address, memoryRowCount * 4);
 
                     UpdateMemoryCells(address, result);
 
@@ -93,7 +93,7 @@ namespace Vortex
             {
                 if (MemoryDataGrid.ItemsSource is DataView dataView)
                 {
-                    DataTable? table = dataView.Table;
+                    var table = dataView.Table;
                     if (table != null)
                     {
                         int rowCount = table.Rows.Count;
