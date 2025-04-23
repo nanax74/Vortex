@@ -11,6 +11,8 @@ using System.Windows;
 using Gee.External.Capstone;
 using Gee.External.Capstone.PowerPc;
 using System.Text.RegularExpressions;
+using System.Windows.Controls;
+using System.Net;
 
 namespace Vortex
 {
@@ -34,12 +36,63 @@ namespace Vortex
             }
         }
 
+        private void DisasmDataGrid_SelectedCellsChanged(object sender, SelectedCellsChangedEventArgs e)
+        {
+            var table = GetDisasmTable();
+            if (table != null)
+            {
+                int selectedRow = DisasmDataGrid.SelectedIndex;
+                DisasmTargetAddressTextBox.Text = table.Rows[selectedRow][0].ToString() ?? string.Empty;
+                DisasmInstructionTextBox.Text = table.Rows[selectedRow][2].ToString() ?? string.Empty;
+            }
+        }
+
+        private async void DisasmInstructionAssembleButton_Click(object sender, RoutedEventArgs e)
+        {
+            string instruction = DisasmInstructionTextBox.Text;
+            if (_socket != null && !string.IsNullOrEmpty(instruction))
+            {
+                // null命令を処理するために、"null"を".long 0"に変換
+                if (instruction == "null") instruction = ".long 0";
+
+                // 書き換える対象のアドレスを取得
+                string addressString = DisasmTargetAddressTextBox.Text;
+                uint address = ConvertEx.ToUInt32(addressString);
+
+                // 絶対参照を相対参照に書き換える
+                instruction = Assembler.RewriteBranchToRelative(instruction, address);
+
+                // アセンブリ命令があるかどうかをチェック
+                if (instruction != "")
+                {
+                    // アセンブル
+                    string machineCodeString;
+                    string errorCode;
+                    (machineCodeString, errorCode) = await Assembler.AssemblePowerPC(instruction);
+
+                    // 書き込み
+                    if (errorCode == "")
+                    {
+                        machineCodeString = machineCodeString.Replace(" ", "").Replace("\n", "");
+                        uint[] machineCode = ConvertEx.ToUInt32Array(machineCodeString);
+
+                        // 書き込み
+                        await Command.WriteKernel(_socket, address, machineCode);
+                        UpdateDisassembler();
+                    }
+                    else
+                    {
+                        Debug.WriteLine($"Error: {errorCode}");
+                    }
+                }
+            }
+        }
+
         private void GenerateDisassemblerCell(int rowCount)
         {
             DataTable table = new DataTable();
 
             // 列の追加
-            table.Columns.Add($"Symbol", typeof(string));  // 文字列型の列
             table.Columns.Add($"Address", typeof(string));  // 文字列型の列
             table.Columns.Add($"Binary Code", typeof(string));  // 文字列型の列
             table.Columns.Add($"Instruction", typeof(string));  // 文字列型の列
@@ -54,19 +107,30 @@ namespace Vortex
             DisasmDataGrid.ItemsSource = table.DefaultView;
         }
 
+        SemaphoreSlim _semaphoreUpdateDisasm = new SemaphoreSlim(1);
+
         private async void UpdateDisassembler()
         {
             if (_socket == null || !_socket.Connected)
             {
-                MessageBox.Show("Not connected to server");
+                Debug.WriteLine("Not connected to server");
                 return;
             }
 
-            uint address = ConvertEx.ToUInt32(DisasmAddressTextBox.Text);
+            _semaphoreUpdateDisasm.Wait();
 
-            byte[] binaryCode = await Command.ReadBytesBigEndian(_socket, address, disasmRowCount * 4);
+            try
+            {
+                uint address = ConvertEx.ToUInt32(DisasmStartAddressTextBox.Text);
 
-            UpdateDisassemblerCells(binaryCode, address);
+                byte[] binaryCode = await Command.ReadBytesBigEndian(_socket, address, disasmRowCount * 4);
+
+                UpdateDisassemblerCells(binaryCode, address);
+            }
+            finally
+            {
+                _semaphoreUpdateDisasm.Release();
+            }
         }
 
         private DataTable? GetDisasmTable()
@@ -103,23 +167,23 @@ namespace Vortex
                 {
                     // 4バイトを1命令として逆アセンブルを行う
                     var instructionBytes = binaryCode.Skip(i).Take(4).ToArray();
-                    var binaryString = BitConverter.ToString(ConvertEx.ReverseEndian(instructionBytes, 4)).Replace("-", "");
+                    var binaryString = BitConverter.ToString(ConvertEx.ReverseEndianPerBlock(instructionBytes, 4)).Replace("-", "");
                     var instruction = disassembler.Disassemble(instructionBytes, address + (uint)i);
 
                     int index = i / 4;
 
-                    table.Rows[index][1] = $"{(address + (uint)i):X8}"; // アドレスを更新
-                    table.Rows[index][2] = binaryString; // バイナリコードを更新
+                    table.Rows[index][0] = $"{(address + (uint)i):X8}"; // アドレスを更新
+                    table.Rows[index][1] = binaryString; // バイナリコードを更新
 
                     if (BitConverter.ToUInt32(instructionBytes, 0) == 0)
                     {
-                        table.Rows[index][3] = "null";
+                        table.Rows[index][2] = "null";
 
                     }
                     else if (instruction.Length == 0)
                     {
                         uint value = BitConverter.ToUInt32(instructionBytes, 0);
-                        table.Rows[index][3] = $".long 0x{value:X8}";
+                        table.Rows[index][2] = $".long 0x{value:X8}";
                     }
                     else
                     {
@@ -130,7 +194,16 @@ namespace Vortex
                         string operands = ins.Operand.ToString();
                         operands = Regex.Replace(operands, @"[a-f]", m => m.Value.ToUpper());
 
-                        table.Rows[index][3] = $"{ins.Mnemonic} {operands}";
+                        string instructionString;
+                        if (operands == string.Empty)
+                        {
+                            instructionString = $"{ins.Mnemonic}";
+                        }
+                        else
+                        {
+                            instructionString = $"{ins.Mnemonic} {operands}";
+                        }
+                        table.Rows[index][2] = instructionString;
                     }
                 }
                 else

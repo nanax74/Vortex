@@ -9,6 +9,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="powerpc-eabi-as.exe" />
+    <None Remove="powerpc-eabi-nm.exe" />
+    <None Remove="powerpc-eabi-objcopy.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="powerpc-eabi-as.exe" />
+    <EmbeddedResource Include="powerpc-eabi-nm.exe" />
+    <EmbeddedResource Include="powerpc-eabi-objcopy.exe" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Gee.External.Capstone" Version="2.3.0" />
     <PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
   </ItemGroup>

@@ -1,49 +1,107 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.Data;
+﻿using System.Data;
 using System.Diagnostics;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
-using System.Xml.Linq;
-using static MaterialDesignThemes.Wpf.Theme;
+using System.Windows.Controls.Primitives;
 
 namespace Vortex
 {
     public partial class MainWindow : Window
     {
-        private CancellationTokenSource? _ctsUpdateMemory;
+        bool _isMemoryUpdate = false;
 
         int memoryColumnCount = 4;
-        int memoryRowCount = 0x100;
+        int memoryRowCount = 0x10;
 
-        private void MemoryDataGrid_Loaded(object sender, RoutedEventArgs e)
+        // メモリタブのメインループ
+        private async Task MemoryTabMain()
         {
-            var table = GetMemoryTable();
-            if (table == null || table.Columns.Count - 1 != memoryColumnCount || table.Rows.Count != memoryRowCount)
+            while(true)
             {
-                GenerateMemoryCell(memoryColumnCount, memoryRowCount);
+                await UpdateMemory();
+                await Task.Delay(1000 / 120);
             }
         }
 
-        private async void AutoUpdateCheckBox_Checked(object sender, RoutedEventArgs e)
+        // チェックボックスの状態に応じてメモリの自動更新フラグを設定
+        private void AutoUpdateCheckBox_Checked(object sender, RoutedEventArgs e)
         {
-            if(_ctsDisconnect != null)
-            {
-                _ctsUpdateMemory = new CancellationTokenSource();
-                await Task.Run(() => UpdateMemory(_ctsDisconnect.Token, _ctsUpdateMemory.Token));
-            }
+            _isMemoryUpdate = true;
         }
-
         private void AutoUpdateCheckBox_Unchecked(object sender, RoutedEventArgs e)
         {
-            _ctsUpdateMemory?.Cancel();
+            _isMemoryUpdate = false;
+        }
+
+        // DataGridの行数、列数を指定してメモリセルを生成
+        private void MemoryDataGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            GenerateMemoryCell(memoryColumnCount, memoryRowCount);
+            SetMemoryDataGridRowHeight();
+        }
+
+        // DataGridの行数を指定して高さを設定
+        private void SetMemoryDataGridRowHeight()
+        {
+            // DataGrid の ColumnHeader の高さを取得
+            var headersPresenter = General.FindVisualChild<DataGridColumnHeadersPresenter>(MemoryDataGrid);
+            if (headersPresenter != null)
+            {
+                double headerHeight = headersPresenter.ActualHeight;
+                double totalHeight = MemoryDataGrid.ActualHeight;
+
+                // 利用可能な高さから行数分で割る
+                double availableHeight = totalHeight - headerHeight;
+                MemoryDataGrid.RowHeight = availableHeight / memoryRowCount;
+            }
+        }
+
+        // メモリの開始アドレスを格納する変数
+        private uint memoryStartAddress = 0x10000000;
+
+        // 無限ループを防ぐためのフラグ
+        private bool isMemoryScrollBarValueChangedByTextBox = false;
+        private bool isMemoryStartAddressTextChangedByScrollBar = false;
+
+        // テキストボックスから開始アドレスを変更した際に呼ばれる
+        private void MemoryStartAddressTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            // テキストをユーザーが直接操作したかどうかを判断
+            if (isMemoryStartAddressTextChangedByScrollBar) return;
+
+            // フラグを有効化
+            isMemoryScrollBarValueChangedByTextBox = true;
+
+            // テキストボックスの値をスクロールバーに反映
+            MemoryScrollBar.Value = ConvertEx.ToUInt32(MemoryStartAddressTextBox.Text);
+            OnMemoryStartAddressChanged();
+
+            // フラグをリセット
+            isMemoryScrollBarValueChangedByTextBox = false;
+        }
+
+        // スクロールバーで開始アドレスを変更した際に呼ばれる
+        private void MemoryScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            // スクロールバーの値をユーザーが直接操作したかどうかを判断
+            if (isMemoryScrollBarValueChangedByTextBox) return;
+
+            // フラグを有効化
+            isMemoryStartAddressTextChangedByScrollBar = true;
+
+            // スクロールバーの値をテキストボックスに反映
+            uint address = (uint)(e.NewValue);
+            MemoryStartAddressTextBox.Text = $"{address:X8}";
+            OnMemoryStartAddressChanged();
+
+            // フラグをリセット
+            isMemoryStartAddressTextChangedByScrollBar = false;
+        }
+
+        // 開始アドレスを変更した際に呼ぶメソッド
+        private void OnMemoryStartAddressChanged()
+        {
+            memoryStartAddress = ConvertEx.ToUInt32(MemoryStartAddressTextBox.Text);
         }
 
         // MemoryTabが選択されているかどうかをチェックするメソッド
@@ -62,10 +120,10 @@ namespace Vortex
             DataTable table = new DataTable();
 
             // 列の追加
-            table.Columns.Add($"Address", typeof(string));  // 文字列型の列
+            table.Columns.Add($"Address", typeof(string));  // アドレス
             for (int col = 0; col < columnCount; col++)
             {
-                table.Columns.Add($"+{(col * 4):X}", typeof(string));  // 文字列型の列
+                table.Columns.Add($"+{(col * 4):X}", typeof(string));  // 値(可変長)
             }
 
             // 行の追加
@@ -78,29 +136,22 @@ namespace Vortex
             MemoryDataGrid.ItemsSource = table.DefaultView;
         }
 
-        private async Task UpdateMemory(CancellationToken tokenDisconnect, CancellationToken tokenUpdateMemory)
+        private async Task UpdateMemory()
         {
-            if (_socket != null && _socket.Connected)
-            {
-                while (!tokenDisconnect.IsCancellationRequested && !tokenUpdateMemory.IsCancellationRequested)
-                {
-                    if (IsMemoryTabSelected())
-                    {
-                        uint address = 0;
-                        Dispatcher.Invoke(() =>
-                        {
-                            address = ConvertEx.ToUInt32(AddressTextBox.Text);
-                        });
+            // 自動更新が無効な場合はスキップ
+            if (!_isMemoryUpdate) return;
 
-                        Debug.WriteLine($"Address: {address:X8}");
+            // 接続されていない場合はスキップ
+            if (_socket == null || !_socket.Connected) return;
 
-                        uint[] result = await Command.ReadUInt32s(_socket, address, memoryRowCount * 4);
+            // メモリタブが選択されていない場合はスキップ
+            if (!IsMemoryTabSelected()) return;
 
-                        UpdateMemoryCells(address, result);
-                    }
-                    await Task.Delay(10); // 更新間隔を調整
-                }
-            }
+            uint address = memoryStartAddress;
+            int size = memoryColumnCount * memoryRowCount * 4;
+
+            uint[] result = await Command.ReadUInt32s(_socket, address, size);
+            UpdateMemoryCells(address, result);
         }
 
         private DataTable? GetMemoryTable()
@@ -119,43 +170,42 @@ namespace Vortex
 
         private void UpdateMemoryCells(uint address, uint[] result)
         {
-            // UIスレッドで一括更新
+            // メモリテーブルを取得
+            var table = GetMemoryTable();
+            if (table == null)
+            {
+                // メモリテーブルが取得できない場合は処理を終了
+                Debug.WriteLine("Memory table is null.");
+                return;
+            }
+
             Dispatcher.Invoke(() =>
             {
-                var table = GetMemoryTable();
-                if (table != null)
+                int rowCount = memoryRowCount; // 行数
+                int colCount = memoryColumnCount; // 列数
+
+                // 行数分だけループ
+                for (int row = 0; row < rowCount; row++)
                 {
-                    int rowCount = table.Rows.Count;
+                    // アドレスを表示
+                    table.Rows[row][0] = $"{address + (uint)(row * memoryColumnCount * 4):X8}";
 
-                    for (int row = 0; row < rowCount; row++)
+                    // 列数分だけループ
+                    for (int col = 0; col < colCount; col++)
                     {
-                        table.Rows[row][0] = $"{address + (uint)(row * 4 * memoryColumnCount):X8}"; // アドレスを更新
+                        int resultIndex = row * colCount + col;
 
-                        for (int col = 0; col < memoryColumnCount; col++)
+                        if (resultIndex < result.Length)
                         {
-                            int index = row * memoryColumnCount + col;
-                            if (index < result.Length)
-                            {
-                                table.Rows[row][col + 1] = $"{result[index]:X8}";
-                            }
-                            else
-                            {
-                                table.Rows[row][col + 1] = "--------"; // データがない場合の埋め
-                            }
+                            table.Rows[row][col + 1] = $"{result[resultIndex]:X8}";
+                        }
+                        else
+                        {
+                            table.Rows[row][col + 1] = "--------";
                         }
                     }
                 }
             });
         }
-
-        private void HexOnly_PreviewTextInput(object sender, TextCompositionEventArgs e)
-        {
-            // 16進数に使える文字か判定（0-9, A-F, a-f）
-            e.Handled = !System.Text.RegularExpressions.Regex.IsMatch(
-                e.Text,
-                @"^[0-9a-fA-F]+$"
-            );
-        }
-
     }
 }

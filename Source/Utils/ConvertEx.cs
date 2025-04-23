@@ -72,11 +72,33 @@ public static class ConvertEx
         return result;
     }
 
-    public static byte[] ReverseEndian(byte[] data, int blockSize)
+    public static uint[] ToUInt32Array(string hex)
     {
-        if (blockSize <= 0) return Array.Empty<byte>();
+        byte[] data = ToBytes(hex);
+        return ToUInt32Array(data);
+    }
 
-        if (data.Length % blockSize != 0) return Array.Empty<byte>();
+    public static byte[] ReverseEndianPerBlock(byte[] data, int blockSize)
+    {
+        if (data == null)
+        {
+            throw new ArgumentNullException(nameof(data));
+        }
+
+        if (blockSize <= 0)
+        {
+            throw new ArgumentOutOfRangeException(nameof(blockSize), "Block size must be greater than zero.");
+        }
+
+        if (data.Length % blockSize != 0)
+        {
+            throw new ArgumentException("Data length must be a multiple of block size.", nameof(data));
+        }
+
+        if (blockSize == 1)
+        {
+            return (byte[])data.Clone(); // バイト単位ではエンディアン反転の意味がない
+        }
 
         byte[] result = new byte[data.Length];
 

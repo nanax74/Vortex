@@ -113,12 +113,12 @@
                         </Grid.RowDefinitions>
                         <Grid Grid.Row="0">
                             <TextBox
-                                Name="CommandTextBox"
-                                FontSize="32"
-                                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                Margin="5"
-                                VerticalAlignment="Center"
-                                materialDesign:HintAssist.Hint="Command"/>
+                            Name="CommandTextBox"
+                            FontSize="32"
+                            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                            Margin="5"
+                            VerticalAlignment="Center"
+                            materialDesign:HintAssist.Hint="Command"/>
                         </Grid>
                         <Grid Grid.Row="1">
                             <Button x:Name="CommandSendButton" Content="Send" Grid.Row="0" Click="CommandSendButton_Click" Margin="5" FontSize="32" Height="80"/>
@@ -165,13 +165,16 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center">
-                            <TextBox Name="AddressTextBox"
+                            <local:HexadecimalTextBox
+                            x:Name="MemoryStartAddressTextBox"
+                            MaxLength="8"
                             Width="300"
                             FontSize="30"
                             Padding="0"
                             Style="{StaticResource MaterialDesignFloatingHintTextBox}"
                             materialDesign:HintAssist.Hint="Start Address"
-                            Margin="10"/>
+                            Margin="10"
+                            TextChanged="MemoryStartAddressTextBox_TextChanged"/>
                             <CheckBox Name="AutoUpdateCheckBox"
                             Content="Auto Update"
                             FontSize="20"
@@ -186,20 +189,54 @@
                             </CheckBox>
                         </StackPanel>
                         <Border Grid.Row="1" BorderBrush="Gray" BorderThickness="1" Padding="5">
-                            <DataGrid
-                            x:Name="MemoryDataGrid"
-                            FontSize="16"
-                            AutoGenerateColumns="True"
-                            Background="White"
-                            ColumnWidth="*"
-                            IsReadOnly="True"
-                            CanUserAddRows="False"
-                            CanUserSortColumns="False"
-                            CanUserResizeColumns="False"
-                            CanUserReorderColumns="False"
-                            GridLinesVisibility="All"
-                            RowHeight="36"
-                            HeadersVisibility="Column"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <DataGrid
+                                x:Name="MemoryDataGrid"
+                                FontSize="14"
+                                AutoGenerateColumns="True"
+                                Background="White"
+                                ColumnWidth="*"
+                                IsReadOnly="True"
+                                CanUserAddRows="False"
+                                CanUserSortColumns="False"
+                                CanUserResizeColumns="False"
+                                CanUserReorderColumns="False"
+                                GridLinesVisibility="All"
+                                HeadersVisibility="Column"
+                                VerticalContentAlignment="Center"
+                                HorizontalContentAlignment="Center">
+                                    <DataGrid.CellStyle>
+                                        <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
+                                            <Setter Property="TextBlock.TextAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="VerticalContentAlignment" Value="Center"/>
+                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                        </Style>
+                                    </DataGrid.CellStyle>
+                                    <DataGrid.ColumnHeaderStyle>
+                                        <Style TargetType="DataGridColumnHeader" BasedOn="{StaticResource MaterialDesignDataGridColumnHeader}">
+                                            <Setter Property="HorizontalContentAlignment" Value="Center"/>
+                                            <Setter Property="Padding" Value="0"/>
+                                            <Setter Property="Margin" Value="0"/>
+                                            <Setter Property="TextBlock.FontSize" Value="16"/>
+                                            <Setter Property="TextBlock.Height" Value="32"/>
+                                        </Style>
+                                    </DataGrid.ColumnHeaderStyle>
+                                </DataGrid>
+                                <ScrollBar x:Name="MemoryScrollBar"
+                                Grid.Column="1"
+                                Orientation="Vertical"
+                                Minimum="0"
+                                Maximum="4294967295"
+                                SmallChange="16"
+                                LargeChange="256"
+                                ValueChanged="MemoryScrollBar_ValueChanged"/>
+                            </Grid>
                         </Border>
                     </Grid>
                 </TabItem>
@@ -218,28 +255,53 @@
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center">
-                            <TextBox Name="DisasmAddressTextBox"
-                                Width="300"
-                                FontSize="30"
-                                Style="{StaticResource MaterialDesignFloatingHintTextBox}"
-                                materialDesign:HintAssist.Hint="Start Address"
-                                Margin="10"/>
+                            <local:HexadecimalTextBox
+                            x:Name="DisasmStartAddressTextBox"
+                            MaxLength="8"
+                            Width="300"
+                            FontSize="30"
+                            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                            materialDesign:HintAssist.Hint="Start Address"
+                            Margin="10"/>
+                        </StackPanel>
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10" Grid.Row="1" VerticalAlignment="Center" HorizontalAlignment="Center">
+                            <TextBox
+                            Name="DisasmTargetAddressTextBox"
+                            Width="300"
+                            FontSize="30"
+                            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                            materialDesign:HintAssist.Hint="Target Address"
+                            Margin="10"/>
+                            <TextBox
+                            Name="DisasmInstructionTextBox"
+                            Width="300"
+                            FontSize="30"
+                            Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                            materialDesign:HintAssist.Hint="Instruction"
+                            Margin="10"/>
+                            <Button
+                            Name="DisasmInstructionAssembleButton"
+                            Width="50"
+                            Height="50"
+                            Style="{StaticResource MaterialDesignFloatingActionButton}"
+                            ToolTip="Assemble">
+                                <materialDesign:PackIcon Kind="Check" Width="30" Height="30" Foreground="White"/>
+                            </Button>
                         </StackPanel>
                         <Border Grid.Row="2" BorderBrush="Gray" BorderThickness="1" Padding="5">
                             <DataGrid x:Name="DisasmDataGrid"
-                                FontSize="16"
-                                AutoGenerateColumns="True"
-                                Background="White"
-                                ColumnWidth="*"
-                                IsReadOnly="True"
-                                CanUserAddRows="False"
-                                CanUserSortColumns="False"
-                                CanUserResizeColumns="False"
-                                CanUserReorderColumns="False"
-                                GridLinesVisibility="All"
-                                RowHeight="36"
-                                HeadersVisibility="Column">
-                            </DataGrid>
+                            FontSize="16"
+                            AutoGenerateColumns="True"
+                            Background="White"
+                            ColumnWidth="*"
+                            IsReadOnly="True"
+                            CanUserAddRows="False"
+                            CanUserSortColumns="False"
+                            CanUserResizeColumns="False"
+                            CanUserReorderColumns="False"
+                            GridLinesVisibility="All"
+                            RowHeight="36"
+                            HeadersVisibility="Column"/>
                         </Border>
                     </Grid>
                 </TabItem>
