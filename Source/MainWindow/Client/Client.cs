@@ -77,7 +77,10 @@ namespace Vortex
                 _socket.Close();
                 _socket = null;
 
-                UpdateConnectButtonState(ConnectionState.Disconnected);
+                Dispatcher.Invoke(() =>
+                {
+                    UpdateConnectButtonState(ConnectionState.Disconnected);
+                });
 
                 Debug.Write("Disconnection is done");
             }
