@@ -15,16 +15,16 @@
     </Window.Resources>
     <Viewbox>
         <Grid Height="540" Width="960">
-            <TabControl Name="MainTab">
+            <TabControl Name="MainTab" TabStripPlacement="Left">
                 <TabControl.ItemContainerStyle>
                     <Style TargetType="TabItem" BasedOn="{StaticResource MaterialDesignTabItem}">
                         <Setter Property="Height" Value="60"/>
                     </Style>
                 </TabControl.ItemContainerStyle>
                 <!-- コネクトタブ -->
-                <TabItem Name="ConnectTab">
+                <TabItem Name="ConnectTab" HorizontalAlignment="Left" Padding="10">
                     <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Width="200">
                             <materialDesign:PackIcon Kind="Wifi" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <TextBlock Text="Connection" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -71,10 +71,10 @@
                             Foreground="White">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="LanConnect"
-                                 Width="75" Height="75"
+                                 Width="60" Height="60"
                                  Foreground="White"
                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Connect" Margin="5" VerticalAlignment="Center" FontSize="48"/>
+                                    <TextBlock Text="Connect" Margin="5" VerticalAlignment="Center" FontSize="40"/>
                                 </StackPanel>
                             </Button>
                             <Button x:Name="DisconnectButton"
@@ -87,19 +87,19 @@
                             IsEnabled="False">
                                 <StackPanel Orientation="Horizontal">
                                     <materialDesign:PackIcon Kind="LanDisconnect"
-                                 Width="75" Height="75"
+                                 Width="60" Height="60"
                                  Foreground="White"
                                  HorizontalAlignment="Center" VerticalAlignment="Center"/>
-                                    <TextBlock Text="Disconnect" Margin="5" VerticalAlignment="Center" FontSize="48"/>
+                                    <TextBlock Text="Disconnect" Margin="5" VerticalAlignment="Center" FontSize="40"/>
                                 </StackPanel>
                             </Button>
                         </Grid>
                     </Grid>
                 </TabItem>
                 <!-- コマンドタブ -->
-                <TabItem Name="CommandTab">
+                <TabItem Name="CommandTab" HorizontalAlignment="Left" Padding="10">
                     <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel VerticalAlignment="Center" Orientation="Horizontal" Width="200">
                             <materialDesign:PackIcon Kind="Terminal" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <TextBlock Text="Command" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -152,9 +152,9 @@
                     </Grid>
                 </TabItem>
                 <!-- メモリータブ -->
-                <TabItem Name="MemoryTab">
+                <TabItem Name="MemoryTab" HorizontalAlignment="Left" Padding="10">
                     <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Width="200">
                             <materialDesign:PackIcon Kind="Memory" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <TextBlock Text="Memory" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </StackPanel>
@@ -207,8 +207,11 @@
                                 CanUserReorderColumns="False"
                                 GridLinesVisibility="All"
                                 HeadersVisibility="Column"
+                                SelectionMode="Single"
+                                SelectionUnit="Cell"
                                 VerticalContentAlignment="Center"
-                                HorizontalContentAlignment="Center">
+                                HorizontalContentAlignment="Center"
+                                MouseDoubleClick="MemoryDataGrid_MouseDoubleClick">
                                     <DataGrid.CellStyle>
                                         <Style TargetType="DataGridCell" BasedOn="{StaticResource MaterialDesignDataGridCell}">
                                             <Setter Property="TextBlock.TextAlignment" Value="Center"/>
@@ -241,11 +244,12 @@
                     </Grid>
                 </TabItem>
                 <!-- ディスアセンブラタブ -->
-                <TabItem Name="DisassemblerTab">
+                <TabItem Name="DisassemblerTab" HorizontalAlignment="Left" Padding="10">
                     <TabItem.Header>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Width="200">
                             <materialDesign:PackIcon Kind="Code" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <TextBlock Text="Disassembler" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <ListBox Width="100" d:ItemsSource="{d:SampleData ItemCount=5}"/>
                         </StackPanel>
                     </TabItem.Header>
                     <Grid Margin="20">
@@ -304,6 +308,77 @@
                             HeadersVisibility="Column"/>
                         </Border>
                     </Grid>
+                </TabItem>
+                <!-- ブレークポイントタブ -->
+                <TabItem Name="BreakpointTab" HorizontalAlignment="Left" Padding="10">
+                    <TabItem.Header>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Width="200">
+                            <materialDesign:PackIcon Kind="Record" Width="36" Height="36" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <TextBlock Text="Breakpoint" FontSize="24" Margin="5,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </TabItem.Header>
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="10">
+                        <!-- Address Input -->
+                        <local:HexadecimalTextBox
+                        x:Name="DataBreakpointAddressTextBox"
+                        Width="180"
+                        FontSize="20"
+                        MaxLength="8"
+                        Padding="4"
+                        Margin="4"
+                        Style="{StaticResource MaterialDesignFloatingHintTextBox}"
+                        materialDesign:HintAssist.Hint="Address"/>
+
+                        <!-- Size ComboBox -->
+                        <ComboBox
+                        x:Name="SizeComboBox"
+                        Width="130"
+                        FontSize="20"
+                        Padding="4"
+                        Margin="4"
+                        Style="{StaticResource MaterialDesignComboBox}"
+                        materialDesign:HintAssist.Hint="Size (bytes)">
+                            <ComboBoxItem Content="1"/>
+                            <ComboBoxItem Content="2"/>
+                            <ComboBoxItem Content="4"/>
+                            <ComboBoxItem Content="8"/>
+                        </ComboBox>
+
+                        <!-- Read -->
+                        <CheckBox
+                        x:Name="ReadFlagCheckBox"
+                        Content="Read"
+                        VerticalAlignment="Center"
+                        Margin="10,0"
+                        Style="{StaticResource MaterialDesignCheckBox}">
+                            <CheckBox.LayoutTransform>
+                                <ScaleTransform ScaleX="2" ScaleY="2"/>
+                            </CheckBox.LayoutTransform>
+                        </CheckBox>
+
+                        <!-- Write -->
+                        <CheckBox
+                        x:Name="WriteFlagCheckBox"
+                        Content="Write"
+                        VerticalAlignment="Center"
+                        Margin="10,0"
+                        Style="{StaticResource MaterialDesignCheckBox}">
+                            <CheckBox.LayoutTransform>
+                                <ScaleTransform ScaleX="2" ScaleY="2"/>
+                            </CheckBox.LayoutTransform>
+                        </CheckBox>
+
+                        <!-- Set Button -->
+                        <Button
+                        Name="SetDataBreakpointButton"
+                        Width="50"
+                        Height="50"
+                        Margin="10,0"
+                        Style="{StaticResource MaterialDesignFloatingActionButton}"
+                        ToolTip="Set">
+                            <materialDesign:PackIcon Kind="Check" Width="30" Height="30" Foreground="White"/>
+                        </Button>
+                    </StackPanel>
                 </TabItem>
             </TabControl>
         </Grid>

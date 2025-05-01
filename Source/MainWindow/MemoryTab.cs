@@ -10,7 +10,7 @@ namespace Vortex
     {
         bool _isMemoryUpdate = false;
 
-        int memoryColumnCount = 4;
+        int memoryColumnCount = 0x8;
         int memoryRowCount = 0x10;
 
         // メモリタブのメインループ
@@ -18,7 +18,7 @@ namespace Vortex
         {
             while(true)
             {
-                await UpdateMemory();
+                await UpdateMemory(true);
                 await Task.Delay(1000 / 120);
             }
         }
@@ -59,12 +59,18 @@ namespace Vortex
         // メモリの開始アドレスを格納する変数
         private uint memoryStartAddress = 0x10000000;
 
+        private async Task UpdateMemoryStartAddress(uint address)
+        {
+            memoryStartAddress = address;
+            await UpdateMemory(false);
+        }
+
         // 無限ループを防ぐためのフラグ
         private bool isMemoryScrollBarValueChangedByTextBox = false;
         private bool isMemoryStartAddressTextChangedByScrollBar = false;
 
         // テキストボックスから開始アドレスを変更した際に呼ばれる
-        private void MemoryStartAddressTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        private async void MemoryStartAddressTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             // テキストをユーザーが直接操作したかどうかを判断
             if (isMemoryStartAddressTextChangedByScrollBar) return;
@@ -74,14 +80,14 @@ namespace Vortex
 
             // テキストボックスの値をスクロールバーに反映
             MemoryScrollBar.Value = ConvertEx.ToUInt32(MemoryStartAddressTextBox.Text);
-            OnMemoryStartAddressChanged();
+            await OnMemoryStartAddressChanged();
 
             // フラグをリセット
             isMemoryScrollBarValueChangedByTextBox = false;
         }
 
         // スクロールバーで開始アドレスを変更した際に呼ばれる
-        private void MemoryScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private async void MemoryScrollBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             // スクロールバーの値をユーザーが直接操作したかどうかを判断
             if (isMemoryScrollBarValueChangedByTextBox) return;
@@ -92,16 +98,17 @@ namespace Vortex
             // スクロールバーの値をテキストボックスに反映
             uint address = (uint)(e.NewValue);
             MemoryStartAddressTextBox.Text = $"{address:X8}";
-            OnMemoryStartAddressChanged();
+            await OnMemoryStartAddressChanged();
 
             // フラグをリセット
             isMemoryStartAddressTextChangedByScrollBar = false;
         }
 
-        // 開始アドレスを変更した際に呼ぶメソッド
-        private void OnMemoryStartAddressChanged()
+        // 開始アドレスを変更した際に呼ばれるメソッド
+        private async Task OnMemoryStartAddressChanged()
         {
-            memoryStartAddress = ConvertEx.ToUInt32(MemoryStartAddressTextBox.Text);
+            uint address = ConvertEx.ToUInt32(MemoryStartAddressTextBox.Text);
+            await UpdateMemoryStartAddress(address);
         }
 
         // MemoryTabが選択されているかどうかをチェックするメソッド
@@ -136,22 +143,47 @@ namespace Vortex
             MemoryDataGrid.ItemsSource = table.DefaultView;
         }
 
-        private async Task UpdateMemory()
+        // 同時アクセスを防ぐためのセマフォ
+        private SemaphoreSlim _updateMemorySemaphore = new SemaphoreSlim(1);
+        private async Task UpdateMemory(bool isCalledFromMain)
         {
-            // 自動更新が無効な場合はスキップ
-            if (!_isMemoryUpdate) return;
-
             // 接続されていない場合はスキップ
             if (_socket == null || !_socket.Connected) return;
 
+            // 諸々の条件に応じてスキップ
+            if (ShouldSkipMemoryUpdate(isCalledFromMain)) return;
+
+            // 前回の処理が完了するまで待機(1秒経っても解放されなかったらスキップ)
+            if (!await _updateMemorySemaphore.WaitAsync(TimeSpan.FromSeconds(1))) return;
+
+            try
+            {
+                // アドレスとサイズを取得
+                uint address = memoryStartAddress;
+                int size = memoryColumnCount * memoryRowCount * 4;
+
+                // メモリを読み取り、結果を更新
+                uint[] result = await Command.ReadUInt32s(_socket, address, size);
+                UpdateMemoryCells(address, result);
+            }
+            finally
+            {
+                // セマフォを解放
+                _updateMemorySemaphore.Release();
+            }
+        }
+
+        private bool ShouldSkipMemoryUpdate(bool isCalledMain)
+        {
             // メモリタブが選択されていない場合はスキップ
-            if (!IsMemoryTabSelected()) return;
+            if (!IsMemoryTabSelected()) return true;
 
-            uint address = memoryStartAddress;
-            int size = memoryColumnCount * memoryRowCount * 4;
+            // 呼び出し元と自動更新フラグの状態に応じてスキップ
+            bool flagA = !_isMemoryUpdate && isCalledMain;
+            bool flagB = _isMemoryUpdate && !isCalledMain;
+            if (flagA || flagB) return true;
 
-            uint[] result = await Command.ReadUInt32s(_socket, address, size);
-            UpdateMemoryCells(address, result);
+            return false;
         }
 
         private DataTable? GetMemoryTable()
@@ -206,6 +238,29 @@ namespace Vortex
                     }
                 }
             });
+        }
+
+        // セルがダブルクリックされたときに呼ばれる
+        private async void MemoryDataGrid_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            // DataGridの選択されたセルを取得
+            var selectedCell = MemoryDataGrid.SelectedCells[0];
+
+            // セルに対応するデータアイテム
+            var item = selectedCell.Item;
+
+            // セルに対応する列
+            var column = selectedCell.Column;
+
+            // セルの値を取得
+            var cellValue = column.GetCellContent(item) as TextBlock;
+
+            // アドレスを取得
+            string addressString = cellValue?.Text ?? "";
+            uint address = ConvertEx.ToUInt32(addressString);
+
+            // DataGridを更新
+            await UpdateMemoryStartAddress(address);
         }
     }
 }

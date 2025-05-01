@@ -15,8 +15,8 @@ public static class Assembler
 
     public static async Task<(string, string)> AssemblePowerPC(string asmCode)
     {
-        // 枠が空くまで待機
-        await semaphore.WaitAsync();
+        // 枠が空くまで待機(タイムアウト3秒)
+        await semaphore.WaitAsync(TimeSpan.FromSeconds(3));
 
         try
         {

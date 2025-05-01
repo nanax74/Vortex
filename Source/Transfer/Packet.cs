@@ -70,6 +70,12 @@ namespace Vortex
                 return -1;
             }
 
+            if (size < 0)
+            {
+                Debug.WriteLine("Data to receive is negative: {0}", size);
+                return -1;
+            }
+
             Data = new byte[size];
             return await Transfer.ReceiveAllAsync(socket, Data, size);
         }

@@ -45,5 +45,13 @@ namespace Vortex
             await receivePacket.ReceivePacketAsync(socket);
             return;
         }
+
+        static public async Task SetDatabreakPoint(Socket socket, uint value)
+        {
+            string command = string.Format(string.Format($"06{value:X8}"));
+            byte[] dataInput = ConvertEx.ToBytes(command);
+            Packet sendPacket = new Packet(dataInput, Packet.DATA_TYPE_DATA);
+            await sendPacket.SendPacketAsync(socket);
+        }
     }
 }

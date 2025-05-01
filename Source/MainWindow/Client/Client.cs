@@ -145,6 +145,7 @@ namespace Vortex
             CommandTab.IsEnabled = enabled;
             MemoryTab.IsEnabled = enabled;
             DisassemblerTab.IsEnabled = enabled;
+            BreakpointTab.IsEnabled = enabled;
         }
 
         private enum ConnectionState
