@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.19)
 project(Vortex LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Network LinguistTools)
+find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 qt_standard_project_setup()
 
@@ -11,6 +12,7 @@ qt_add_executable(Vortex
     vortex.cpp
     vortex.h
     vortex.ui
+    connectiontab.h connectiontab.cpp connectiontab.ui
 )
 
 qt_add_translations(
@@ -22,7 +24,9 @@ target_link_libraries(Vortex
     PRIVATE
         Qt::Core
         Qt::Widgets
+        Qt::Network
 )
+target_link_libraries(Vortex PRIVATE Qt6::Widgets)
 
 include(GNUInstallDirs)
 
