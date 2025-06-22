@@ -1,6 +1,10 @@
 #include "connectiontab.h"
 #include "ui_connectiontab.h"
 
+#include "consoletab.h"
+
+#include <winsock2.h>
+
 ConnectionTab::ConnectionTab(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ConnectionTab)
@@ -46,7 +50,24 @@ void ConnectionTab::onDisconnectButtonClicked()
 
 void ConnectionTab::onConnected()
 {
+    // TCP_NODELAY を設定
+    int fd = static_cast<int>(socket->socketDescriptor());
+    if (fd != -1)
+    {
+        BOOL flag = TRUE;
+        int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag));
+        if (result == 0)
+        {
+            ui->textEdit_Log->append("<span style='color: green;'>[Info] TCP_NODELAY を有効化しました");
+        }
+        else
+        {
+            ui->textEdit_Log->append("<span style='color: orange;'>[Warn] TCP_NODELAY 設定失敗");
+        }
+    }
+
     ui->textEdit_Log->append("<span style='color: green;'>[Info] 接続しました");
+    ui->textEdit_Log->moveCursor(QTextCursor::End);
 
     ui->pushButton_Connect->setEnabled(false);
     ui->pushButton_Disconnect->setEnabled(true);
@@ -55,6 +76,7 @@ void ConnectionTab::onConnected()
 void ConnectionTab::onDisconnected()
 {
     ui->textEdit_Log->append("<span style='color: green;'>[Info] 切断しました");
+    ui->textEdit_Log->moveCursor(QTextCursor::End);
 
     ui->pushButton_Connect->setEnabled(true);
     ui->pushButton_Disconnect->setEnabled(false);
@@ -63,10 +85,27 @@ void ConnectionTab::onDisconnected()
 void ConnectionTab::onReadyRead()
 {
     QByteArray data = socket->readAll();
-    ui->textEdit_Log->append("<span style='color: blue;'>[Recv] " + QString::fromUtf8(data));
+    QString text = QString::fromUtf8(data);
+    ui->textEdit_Log->append("<span style='color: blue;'>[Recv] " + text);
+    ui->textEdit_Log->moveCursor(QTextCursor::End);
+
+    emit dataReceived(text);
 }
 
 void ConnectionTab::onErrorOccurred()
 {
     ui->textEdit_Log->append("<span style='color: red;'>[Error] " + socket->errorString());
+    ui->textEdit_Log->moveCursor(QTextCursor::End);
+}
+
+void ConnectionTab::onSendDataRequested(const QString &text)
+{
+    if (socket && socket->state() == QAbstractSocket::ConnectedState)
+    {
+        socket->write(text.toUtf8());
+    }
+    else
+    {
+        ui->textEdit_Log->append("[Error] ソケットが未接続のため送信できません");
+    }
 }

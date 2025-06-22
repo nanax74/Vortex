@@ -18,6 +18,11 @@
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="label_Host">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>IPアドレス</string>
        </property>
@@ -28,6 +33,23 @@
      </item>
      <item>
       <widget class="QLineEdit" name="lineEdit_Host">
+       <property name="minimumSize">
+        <size>
+         <width>160</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="maximumSize">
+        <size>
+         <width>566</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="inputMask">
         <string/>
        </property>
@@ -38,6 +60,17 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_Connect">
+       <property name="minimumSize">
+        <size>
+         <width>80</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>接続</string>
        </property>
@@ -45,6 +78,17 @@
      </item>
      <item>
       <widget class="QPushButton" name="pushButton_Disconnect">
+       <property name="minimumSize">
+        <size>
+         <width>80</width>
+         <height>40</height>
+        </size>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>切断</string>
        </property>
@@ -56,6 +100,11 @@
     <layout class="QVBoxLayout" name="verticalLayout">
      <item>
       <widget class="QLabel" name="label_Log">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
        <property name="text">
         <string>ログ</string>
        </property>
@@ -66,6 +115,14 @@
      </item>
      <item>
       <widget class="QTextEdit" name="textEdit_Log">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="styleSheet">
+        <string notr="true"/>
+       </property>
        <property name="readOnly">
         <bool>true</bool>
        </property>

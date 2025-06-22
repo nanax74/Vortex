@@ -13,6 +13,8 @@ qt_add_executable(Vortex
     vortex.h
     vortex.ui
     connectiontab.h connectiontab.cpp connectiontab.ui
+    consoletab.h consoletab.cpp consoletab.ui
+
 )
 
 qt_add_translations(

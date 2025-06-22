@@ -25,11 +25,15 @@ private slots:
     void onReadyRead();
     void onErrorOccurred();
 
+public slots:
+    void onSendDataRequested(const QString &text); // ConsoleTabから受信
+
 private:
     Ui::ConnectionTab *ui;
     QTcpSocket *socket;
 
 signals:
+    void dataReceived(QString text); // ConsoleTabに渡す用
 };
 
 #endif // CONNECTIONTAB_H
