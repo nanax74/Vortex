@@ -26,7 +26,7 @@ private slots:
     void onErrorOccurred();
 
 public slots:
-    void onSendDataRequested(const QString &text); // ConsoleTabから受信
+    void onSendDataRequested(const QByteArray &text); // ConsoleTabから受信
 
 private:
     Ui::ConnectionTab *ui;

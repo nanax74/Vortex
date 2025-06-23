@@ -25,7 +25,7 @@ private:
     Ui::ConsoleTab *ui;
 
 signals:
-    void sendData(const QString &data); // ConnectionTab に渡す用
+    void sendData(const QByteArray &data); // ConnectionTab に渡す用
 };
 
 #endif // CONSOLETAB_H

@@ -1,6 +1,8 @@
 #include "consoletab.h"
 #include "ui_consoletab.h"
 
+#include "utils.h"
+
 ConsoleTab::ConsoleTab(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ConsoleTab)
@@ -10,7 +12,7 @@ ConsoleTab::ConsoleTab(QWidget *parent)
     connect(ui->pushButton_Send, &QPushButton::clicked, this, &ConsoleTab::onSendButtonClicked);
 
     // Enterキーでも送信できるように
-    connect(ui->textEdit_Send, &QTextEdit::textChanged, this, &ConsoleTab::onSendKeyPressed);
+    connect(ui->hexTextEdit_Send, &QTextEdit::textChanged, this, &ConsoleTab::onSendKeyPressed);
 }
 
 ConsoleTab::~ConsoleTab()
@@ -20,21 +22,24 @@ ConsoleTab::~ConsoleTab()
 
 void ConsoleTab::onSendButtonClicked()
 {
-    QString data = ui->textEdit_Send->toPlainText().trimmed();
-    if (!data.isEmpty()) {
+    QString text = ui->hexTextEdit_Send->toPlainText().trimmed();
+    if (!text.isEmpty())
+    {
+        QString hexString = filterHex(text);
+        QByteArray data = QByteArray::fromHex(hexString.toUtf8());
         emit sendData(data);  // シグナルで ConnectionTab に渡す
 
         // 送信済みログに追加
-        ui->textEdit_Sent->append(data);
+        ui->hexTextEdit_Sent->append(text);
 
         // 送信欄をクリア
-        ui->textEdit_Send->clear();
+        ui->hexTextEdit_Send->clear();
     }
 }
 
 void ConsoleTab::onSendKeyPressed()
 {
-    QString text = ui->textEdit_Send->toPlainText();
+    QString text = ui->hexTextEdit_Send->toPlainText();
     if (text.endsWith('\n'))
     {
         onSendButtonClicked();  // Enterで送信
@@ -44,12 +49,12 @@ void ConsoleTab::onSendKeyPressed()
 void ConsoleTab::onDataReceived(const QString &data)
 {
     // 受信欄にすでにあるデータを受信済みに移す
-    QString previous = ui->textEdit_Receive->toPlainText().trimmed();
+    QString previous = ui->hexTextEdit_Receive->toPlainText().trimmed();
     if (!previous.isEmpty())
     {
-        ui->textEdit_Received->append(previous);
+        ui->hexTextEdit_Received->append(previous);
     }
 
     // 新しいデータを受信欄に表示
-    ui->textEdit_Receive->setPlainText(data);
+    ui->hexTextEdit_Receive->setPlainText(data);
 }

@@ -1,8 +1,6 @@
 #include "connectiontab.h"
 #include "ui_connectiontab.h"
 
-#include "consoletab.h"
-
 #include <winsock2.h>
 
 ConnectionTab::ConnectionTab(QWidget *parent)
@@ -98,14 +96,14 @@ void ConnectionTab::onErrorOccurred()
     ui->textEdit_Log->moveCursor(QTextCursor::End);
 }
 
-void ConnectionTab::onSendDataRequested(const QString &text)
+void ConnectionTab::onSendDataRequested(const QByteArray &data)
 {
     if (socket && socket->state() == QAbstractSocket::ConnectedState)
     {
-        socket->write(text.toUtf8());
+        socket->write(data);
     }
     else
     {
-        ui->textEdit_Log->append("[Error] ソケットが未接続のため送信できません");
+        ui->textEdit_Log->append("<span style='color: red;'>[Error] ソケットが未接続のため送信できません");
     }
 }

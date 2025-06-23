@@ -14,12 +14,19 @@ qt_add_executable(Vortex
     vortex.ui
     connectiontab.h connectiontab.cpp connectiontab.ui
     consoletab.h consoletab.cpp consoletab.ui
+    utils.h
+    hexlineedit.h hexlineedit.cpp
+    hextextedit.h hextextedit.cpp
 
 )
 
 qt_add_translations(
     TARGETS Vortex
     TS_FILES Vortex_ja_JP.ts
+)
+
+target_include_directories(Vortex PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_link_libraries(Vortex
