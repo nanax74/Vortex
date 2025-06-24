@@ -3,6 +3,7 @@
 
 #include "connectiontab.h"
 #include "consoletab.h"
+#include "searchtab.h"
 
 Vortex::Vortex(QWidget *parent)
     : QMainWindow(parent)
@@ -15,6 +16,9 @@ Vortex::Vortex(QWidget *parent)
 
     ConsoleTab* consoleTab = new ConsoleTab(this);
     ui->tabWidget_Main->addTab(consoleTab, tr("コンソール"));
+
+    SearchTab* searchTab = new SearchTab(this);
+    ui->tabWidget_Main->addTab(searchTab, tr("サーチ"));
 
     connect(consoleTab, &ConsoleTab::sendData, connectionTab, &ConnectionTab::onSendDataRequested); // 送信要求
     connect(connectionTab, &ConnectionTab::dataReceived, consoleTab, &ConsoleTab::onDataReceived); // 受信検知

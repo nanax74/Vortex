@@ -82,12 +82,37 @@ void ConnectionTab::onDisconnected()
 
 void ConnectionTab::onReadyRead()
 {
-    QByteArray data = socket->readAll();
-    QString text = QString::fromUtf8(data);
-    ui->textEdit_Log->append("<span style='color: blue;'>[Recv] " + text);
-    ui->textEdit_Log->moveCursor(QTextCursor::End);
+    recvBuffer.append(socket->readAll());
 
-    emit dataReceived(text);
+    while (true)
+    {
+        if (recvBuffer.size() < sizeof(quint32))
+        {
+            // ヘッダーがまだ全部来ていない（パケット長のため4バイト）
+            break;
+        }
+
+        // 先頭4バイトはパケット長（ビッグエンディアン）
+        quint32 packetSize = qFromBigEndian<quint32>(reinterpret_cast<const uchar*>(recvBuffer.constData()));
+
+        if (recvBuffer.size() < packetSize + sizeof(quint32))
+        {
+            // パケット全体がまだ揃っていない
+            break;
+        }
+
+        // パケット本体を切り出し
+        QByteArray packet = recvBuffer.mid(sizeof(quint32), packetSize);
+
+        // バッファから取り除く
+        recvBuffer.remove(0, packetSize + sizeof(quint32));
+
+        emit dataReceived(packet);
+
+        QString text = QString::fromUtf8(packet.toHex());
+        ui->textEdit_Log->append("<span style='color: blue;'>[Recv] " + text);
+        ui->textEdit_Log->moveCursor(QTextCursor::End);
+    }
 }
 
 void ConnectionTab::onErrorOccurred()
@@ -100,7 +125,15 @@ void ConnectionTab::onSendDataRequested(const QByteArray &data)
 {
     if (socket && socket->state() == QAbstractSocket::ConnectedState)
     {
-        socket->write(data);
+        QByteArray packet;
+
+        quint32 size = data.size();
+        quint32 size_be = htonl(size);  // ネットワークバイトオーダーに変換
+
+        packet.append(reinterpret_cast<const char*>(&size_be), sizeof(size_be));
+        packet.append(data);
+
+        socket->write(packet);
     }
     else
     {

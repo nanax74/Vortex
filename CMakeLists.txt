@@ -17,6 +17,7 @@ qt_add_executable(Vortex
     utils.h
     hexlineedit.h hexlineedit.cpp
     hextextedit.h hextextedit.cpp
+    searchtab.h searchtab.cpp searchtab.ui
 
 )
 

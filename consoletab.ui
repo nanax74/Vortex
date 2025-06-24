@@ -50,7 +50,7 @@
       </widget>
      </item>
      <item row="1" column="2">
-      <widget class="HexTextEdit" name="hexTextEdit_Sent">
+      <widget class="QTextEdit" name="hexTextEdit_Sent">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
@@ -74,7 +74,7 @@
       </widget>
      </item>
      <item row="5" column="2">
-      <widget class="HexTextEdit" name="hexTextEdit_Received">
+      <widget class="QTextEdit" name="hexTextEdit_Received">
        <property name="font">
         <font>
          <pointsize>12</pointsize>

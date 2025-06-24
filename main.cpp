@@ -17,6 +17,17 @@ int main(int argc, char *argv[])
             break;
         }
     }
+
+    QApplication::setStyle("windowsvista");
+
+    QPalette pal = qApp->palette();
+
+    // 選択中の背景とテキスト色を設定
+    pal.setColor(QPalette::Highlight, QColor(51, 153, 255));
+    pal.setColor(QPalette::HighlightedText, QColor(255, 255, 255));
+
+    qApp->setPalette(pal);
+
     Vortex w;
     w.show();
     return a.exec();

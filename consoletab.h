@@ -16,10 +16,9 @@ public:
     ~ConsoleTab();
 
 public slots:
-    void onDataReceived(const QString &data); // ConnectionTab から受信
+    void onDataReceived(const QByteArray &data); // ConnectionTab から受信
 private slots:
     void onSendButtonClicked();
-    void onSendKeyPressed();
 
 private:
     Ui::ConsoleTab *ui;

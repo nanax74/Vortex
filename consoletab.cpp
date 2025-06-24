@@ -10,9 +10,6 @@ ConsoleTab::ConsoleTab(QWidget *parent)
     ui->setupUi(this);
 
     connect(ui->pushButton_Send, &QPushButton::clicked, this, &ConsoleTab::onSendButtonClicked);
-
-    // Enterキーでも送信できるように
-    connect(ui->hexTextEdit_Send, &QTextEdit::textChanged, this, &ConsoleTab::onSendKeyPressed);
 }
 
 ConsoleTab::~ConsoleTab()
@@ -37,16 +34,7 @@ void ConsoleTab::onSendButtonClicked()
     }
 }
 
-void ConsoleTab::onSendKeyPressed()
-{
-    QString text = ui->hexTextEdit_Send->toPlainText();
-    if (text.endsWith('\n'))
-    {
-        onSendButtonClicked();  // Enterで送信
-    }
-}
-
-void ConsoleTab::onDataReceived(const QString &data)
+void ConsoleTab::onDataReceived(const QByteArray &data)
 {
     // 受信欄にすでにあるデータを受信済みに移す
     QString previous = ui->hexTextEdit_Receive->toPlainText().trimmed();
@@ -56,5 +44,6 @@ void ConsoleTab::onDataReceived(const QString &data)
     }
 
     // 新しいデータを受信欄に表示
-    ui->hexTextEdit_Receive->setPlainText(data);
+    QString text = QString::fromUtf8(data.toHex());
+    ui->hexTextEdit_Receive->setPlainText(text);
 }

@@ -31,9 +31,10 @@ public slots:
 private:
     Ui::ConnectionTab *ui;
     QTcpSocket *socket;
+    QByteArray recvBuffer;
 
 signals:
-    void dataReceived(QString text); // ConsoleTabに渡す用
+    void dataReceived(QByteArray text); // ConsoleTabに渡す用
 };
 
 #endif // CONNECTIONTAB_H
