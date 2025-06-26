@@ -42,6 +42,8 @@ private:
 
 signals:
     void dataReceived(const Packet& packet); // 外部に渡す
+    void connected();
+    void disconnected();
 };
 
 #endif // CONNECTIONTAB_H

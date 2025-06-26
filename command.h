@@ -24,6 +24,38 @@ namespace Command
         // ダミー
         Dummy = 0xFFFFFFFF
     };
+
+    enum class Comparison : quint32
+    {
+        Equal = 0,         // ==
+        NotEqual = 1,      // !=
+        LessThan = 2,      // <
+        LessOrEqual = 3,   // <=
+        GreaterThan = 4,   // >
+        GreaterOrEqual = 5 // >=
+    };
+
+    enum class ValueType : quint32
+    {
+        Int8   = 0,
+        UInt8  = 1,
+        Int16  = 2,
+        UInt16 = 3,
+        Int32  = 4,
+        UInt32 = 5,
+        Int64  = 6,
+        UInt64 = 7,
+        Float  = 8,
+        Double = 9,
+        Unknown = 10
+    };
+
+    enum class Response : quint32
+    {
+        Success = 0,
+        Failure = 1,
+        Progress = 2
+    };
 }
 
 #endif // COMMAND_H

@@ -81,6 +81,8 @@ void ConnectionTab::onConnected()
 
     lastResponseTimer.start();
     heartbeatTimer->start(1000);
+
+    emit connected();
 }
 
 void ConnectionTab::onDisconnected()
@@ -93,6 +95,8 @@ void ConnectionTab::onDisconnected()
 
     heartbeatTimer->stop();
     lastResponseTimer.invalidate();
+
+    emit disconnected();
 }
 
 void ConnectionTab::onReadyRead()

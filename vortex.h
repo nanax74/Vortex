@@ -17,6 +17,15 @@ public:
     Vortex(QWidget *parent = nullptr);
     ~Vortex();
 
+    int connectionTabIndex;
+    int consoleTabIndex;
+    int searchTabIndex;
+
+private slots:
+    void onConnected();
+    void onDisconnected();
+    void onTabChanged(int index);
+
 private:
     Ui::Vortex *ui;
 };

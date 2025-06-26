@@ -18,7 +18,8 @@ public:
     ~SearchTab();
 
 public slots:
-    void onDataReceived(const Packet& data); // ConnectionTab から受信
+    void onDataReceived(const Packet& packet); // ConnectionTab から受信
+    void onTabOpened();
 
 private slots:
     void onSearchButtonClicked();
@@ -26,6 +27,9 @@ private slots:
 
 private:
     Ui::SearchTab *ui;
+
+    void FileEnableCase();
+    void FileDisableCase();
 
 signals:
     void sendData(const Packet& data); // ConnectionTab に渡す用
