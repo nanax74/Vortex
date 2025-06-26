@@ -18,7 +18,8 @@ public:
     ~ConsoleTab();
 
 public slots:
-    void onDataReceived(const Packet& data); // ConnectionTab から受信
+    void onDataReceived(const Packet& data); // ConnectionTabから受信
+    void onDataSent(const Packet& data); // ConnectTabから受信
 
 private slots:
     void onSendButtonClicked();

@@ -2,8 +2,11 @@
 #define SEARCHTAB_H
 
 #include <QWidget>
+#include <QElapsedTimer>
+#include <QTimer>
 
 #include "packet.h"
+#include "searchtablemodel.h"
 
 namespace Ui {
 class SearchTab;
@@ -24,12 +27,20 @@ public slots:
 private slots:
     void onSearchButtonClicked();
     void onResetButtonClicked();
+    void onRequestNowValues();
 
 private:
     Ui::SearchTab *ui;
+    bool isDumped = false;
+    QElapsedTimer stopwatch;
+    QTimer *displayTimer;
+    SearchTableModel* tableModel;
+    QTimer* nowValueUpdateTimer = nullptr;
 
     void FileEnableCase();
     void FileDisableCase();
+    void startStopwatch();
+    void stopStopwatch();
 
 signals:
     void sendData(const Packet& data); // ConnectionTab に渡す用

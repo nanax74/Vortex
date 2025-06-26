@@ -21,6 +21,8 @@ qt_add_executable(Vortex
     searchtab.h searchtab.cpp searchtab.ui
     command.h
     packet.h packet.cpp
+    searchtablemodel.h searchtablemodel.cpp
+
 
 )
 

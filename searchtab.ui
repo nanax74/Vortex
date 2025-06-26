@@ -14,70 +14,6 @@
    <string>Form</string>
   </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <widget class="QLabel" name="label_StartAddress">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>開始アドレス: 0x</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="HexLineEdit" name="lineEdit_StartAddress">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="maxLength">
-        <number>8</number>
-       </property>
-       <property name="placeholderText">
-        <string>例: 10000000</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_EndAddress">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>終了アドレス: 0x</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="HexLineEdit" name="lineEdit_EndAddress">
-       <property name="sizePolicy">
-        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-         <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
-        </sizepolicy>
-       </property>
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="maxLength">
-        <number>8</number>
-       </property>
-       <property name="placeholderText">
-        <string>例: 11000000</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
-   </item>
    <item row="4" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout_3">
      <item>
@@ -90,7 +26,7 @@
           </font>
          </property>
          <property name="text">
-          <string>0件(0.00秒)</string>
+          <string>0件</string>
          </property>
         </widget>
        </item>
@@ -162,29 +98,62 @@
      </item>
     </layout>
    </item>
-   <item row="7" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_5">
+   <item row="3" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
-      <widget class="QPushButton" name="pushButton_Search">
+      <widget class="QLabel" name="label_ValueType">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
         </font>
        </property>
        <property name="text">
-        <string>サーチ</string>
+        <string>値の型:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="pushButton_Reset">
+      <widget class="QComboBox" name="comboBox_ValueType">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_Value">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
         </font>
        </property>
        <property name="text">
-        <string>リセット</string>
+        <string>値:</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="HexLineEdit" name="lineEdit_Value">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="maxLength">
+        <number>8</number>
+       </property>
+       <property name="placeholderText">
+        <string>例: 100</string>
        </property>
       </widget>
      </item>
@@ -226,16 +195,6 @@
          <pointsize>12</pointsize>
         </font>
        </property>
-       <item>
-        <property name="text">
-         <string>特定値</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>不明値</string>
-        </property>
-       </item>
       </widget>
      </item>
      <item>
@@ -263,11 +222,6 @@
          <pointsize>12</pointsize>
         </font>
        </property>
-       <item>
-        <property name="text">
-         <string>=</string>
-        </property>
-       </item>
       </widget>
      </item>
     </layout>
@@ -281,22 +235,49 @@
      </property>
     </widget>
    </item>
-   <item row="3" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
+   <item row="0" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
-      <widget class="QLabel" name="label_ValueType">
+      <widget class="QLabel" name="label_StartAddress">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
         </font>
        </property>
        <property name="text">
-        <string>値の型:</string>
+        <string>開始アドレス: 0x</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox_ValueType">
+      <widget class="HexLineEdit" name="lineEdit_StartAddress">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="maxLength">
+        <number>8</number>
+       </property>
+       <property name="placeholderText">
+        <string>例: 10000000</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_EndAddress">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>終了アドレス: 0x</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="HexLineEdit" name="lineEdit_EndAddress">
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
          <horstretch>0</horstretch>
@@ -308,101 +289,71 @@
          <pointsize>12</pointsize>
         </font>
        </property>
-       <item>
-        <property name="text">
-         <string>int8</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>uint8</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>int16</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>uint16</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>int32</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>uint32</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>int64</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>uint64</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>float</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>double</string>
-        </property>
-       </item>
-      </widget>
-     </item>
-     <item>
-      <widget class="QLabel" name="label_Value">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string>値:</string>
-       </property>
-      </widget>
-     </item>
-     <item>
-      <widget class="HexLineEdit" name="lineEdit_Value">
-       <property name="font">
-        <font>
-         <pointsize>12</pointsize>
-        </font>
-       </property>
-       <property name="text">
-        <string/>
-       </property>
        <property name="maxLength">
         <number>8</number>
        </property>
        <property name="placeholderText">
-        <string>例: 100</string>
+        <string>例: 11000000</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="31" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_5">
+     <item>
+      <widget class="QPushButton" name="pushButton_Search">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>サーチ</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="pushButton_Reset">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>リセット</string>
        </property>
       </widget>
      </item>
     </layout>
    </item>
    <item row="6" column="0">
-    <widget class="QProgressBar" name="progressBar">
-     <property name="font">
-      <font>
-       <pointsize>12</pointsize>
-      </font>
-     </property>
-     <property name="value">
-      <number>24</number>
-     </property>
-    </widget>
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <item>
+      <widget class="QProgressBar" name="progressBar">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="value">
+        <number>24</number>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_Time">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>(0.00秒)</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

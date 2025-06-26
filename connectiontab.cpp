@@ -142,6 +142,8 @@ void ConnectionTab::onSendDataRequested(const Packet &packet)
 {
     if (socket && socket->state() == QAbstractSocket::ConnectedState)
     {
+        emit dataSent(packet);
+
         Packet packetSend;
 
         QByteArray data = packet.GetData();

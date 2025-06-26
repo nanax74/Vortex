@@ -28,9 +28,6 @@ void ConsoleTab::onSendButtonClicked()
         Packet packet(data);
         emit sendData(packet);  // シグナルで ConnectionTab に渡す
 
-        // 送信済みログに追加
-        ui->hexTextEdit_Sent->append(text);
-
         // 送信欄をクリア
         ui->hexTextEdit_Send->clear();
     }
@@ -48,4 +45,10 @@ void ConsoleTab::onDataReceived(const Packet& packet)
     // 新しいデータを受信欄に表示
     QString text = QString::fromUtf8(packet.GetData().toHex());
     ui->hexTextEdit_Receive->setPlainText(text);
+}
+
+void ConsoleTab::onDataSent(const Packet& packet)
+{
+    QString previous = QString::fromUtf8(packet.GetData().toHex());
+    ui->hexTextEdit_Sent->append(previous);
 }

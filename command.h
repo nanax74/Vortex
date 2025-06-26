@@ -52,9 +52,10 @@ namespace Command
 
     enum class Response : quint32
     {
-        Success = 0,
-        Failure = 1,
-        Progress = 2
+        Failure = 0,
+        Success = 1,
+        Progress = 2,
+        Data
     };
 }
 
