@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+#include "packet.h"
+
 namespace Ui {
 class SearchTab;
 }
@@ -15,8 +17,18 @@ public:
     explicit SearchTab(QWidget *parent = nullptr);
     ~SearchTab();
 
+public slots:
+    void onDataReceived(const Packet& data); // ConnectionTab から受信
+
+private slots:
+    void onSearchButtonClicked();
+    void onResetButtonClicked();
+
 private:
     Ui::SearchTab *ui;
+
+signals:
+    void sendData(const Packet& data); // ConnectionTab に渡す用
 };
 
 #endif // SEARCHTAB_H

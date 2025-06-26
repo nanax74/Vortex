@@ -1,6 +1,7 @@
 #include "consoletab.h"
 #include "ui_consoletab.h"
 
+#include "packet.h"
 #include "utils.h"
 
 ConsoleTab::ConsoleTab(QWidget *parent)
@@ -24,7 +25,8 @@ void ConsoleTab::onSendButtonClicked()
     {
         QString hexString = filterHex(text);
         QByteArray data = QByteArray::fromHex(hexString.toUtf8());
-        emit sendData(data);  // シグナルで ConnectionTab に渡す
+        Packet packet(data);
+        emit sendData(packet);  // シグナルで ConnectionTab に渡す
 
         // 送信済みログに追加
         ui->hexTextEdit_Sent->append(text);
@@ -34,7 +36,7 @@ void ConsoleTab::onSendButtonClicked()
     }
 }
 
-void ConsoleTab::onDataReceived(const QByteArray &data)
+void ConsoleTab::onDataReceived(const Packet& packet)
 {
     // 受信欄にすでにあるデータを受信済みに移す
     QString previous = ui->hexTextEdit_Receive->toPlainText().trimmed();
@@ -44,6 +46,6 @@ void ConsoleTab::onDataReceived(const QByteArray &data)
     }
 
     // 新しいデータを受信欄に表示
-    QString text = QString::fromUtf8(data.toHex());
+    QString text = QString::fromUtf8(packet.GetData().toHex());
     ui->hexTextEdit_Receive->setPlainText(text);
 }

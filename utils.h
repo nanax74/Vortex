@@ -5,7 +5,7 @@
 #include <QLineEdit>
 #include <QRegularExpression>
 
-QString filterHex(const QString& input)
+inline QString filterHex(const QString& input)
 {
     QString filtered = input;
     static QRegularExpression hex("[^0-9A-Fa-f]");

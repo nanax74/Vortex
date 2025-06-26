@@ -22,6 +22,9 @@ Vortex::Vortex(QWidget *parent)
 
     connect(consoleTab, &ConsoleTab::sendData, connectionTab, &ConnectionTab::onSendDataRequested); // 送信要求
     connect(connectionTab, &ConnectionTab::dataReceived, consoleTab, &ConsoleTab::onDataReceived); // 受信検知
+
+    connect(searchTab, &SearchTab::sendData, connectionTab, &ConnectionTab::onSendDataRequested);
+    connect(connectionTab, &ConnectionTab::dataReceived, searchTab, &SearchTab::onDataReceived);
 }
 
 Vortex::~Vortex()

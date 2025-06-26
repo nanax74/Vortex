@@ -3,6 +3,8 @@
 
 #include <QWidget>
 
+#include "packet.h"
+
 namespace Ui {
 class ConsoleTab;
 }
@@ -16,7 +18,8 @@ public:
     ~ConsoleTab();
 
 public slots:
-    void onDataReceived(const QByteArray &data); // ConnectionTab から受信
+    void onDataReceived(const Packet& data); // ConnectionTab から受信
+
 private slots:
     void onSendButtonClicked();
 
@@ -24,7 +27,7 @@ private:
     Ui::ConsoleTab *ui;
 
 signals:
-    void sendData(const QByteArray &data); // ConnectionTab に渡す用
+    void sendData(const Packet& data); // ConnectionTab に渡す用
 };
 
 #endif // CONSOLETAB_H

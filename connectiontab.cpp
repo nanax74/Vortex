@@ -1,7 +1,12 @@
 #include "connectiontab.h"
 #include "ui_connectiontab.h"
 
+#include <QTimer>
+
 #include <winsock2.h>
+
+#include "command.h"
+#include "packet.h"
 
 ConnectionTab::ConnectionTab(QWidget *parent)
     : QWidget(parent)
@@ -21,6 +26,10 @@ ConnectionTab::ConnectionTab(QWidget *parent)
     connect(socket, &QTcpSocket::errorOccurred, this, &ConnectionTab::onErrorOccurred);
 
     ui->pushButton_Disconnect->setEnabled(false);
+
+    heartbeatTimer = new QTimer(this);
+    connect(heartbeatTimer, &QTimer::timeout, this, &ConnectionTab::onHeartBeat);
+    connect(this, &ConnectionTab::dataReceived, this, &ConnectionTab::onHeartbeatResponseReceived);
 }
 
 ConnectionTab::~ConnectionTab()
@@ -69,6 +78,9 @@ void ConnectionTab::onConnected()
 
     ui->pushButton_Connect->setEnabled(false);
     ui->pushButton_Disconnect->setEnabled(true);
+
+    lastResponseTimer.start();
+    heartbeatTimer->start(1000);
 }
 
 void ConnectionTab::onDisconnected()
@@ -78,6 +90,9 @@ void ConnectionTab::onDisconnected()
 
     ui->pushButton_Connect->setEnabled(true);
     ui->pushButton_Disconnect->setEnabled(false);
+
+    heartbeatTimer->stop();
+    lastResponseTimer.invalidate();
 }
 
 void ConnectionTab::onReadyRead()
@@ -102,16 +117,14 @@ void ConnectionTab::onReadyRead()
         }
 
         // パケット本体を切り出し
-        QByteArray packet = recvBuffer.mid(sizeof(quint32), packetSize);
+        QByteArray data = recvBuffer.mid(sizeof(quint32), packetSize);
 
         // バッファから取り除く
         recvBuffer.remove(0, packetSize + sizeof(quint32));
 
-        emit dataReceived(packet);
+        Packet packet(data);
 
-        QString text = QString::fromUtf8(packet.toHex());
-        ui->textEdit_Log->append("<span style='color: blue;'>[Recv] " + text);
-        ui->textEdit_Log->moveCursor(QTextCursor::End);
+        emit dataReceived(packet);
     }
 }
 
@@ -121,22 +134,53 @@ void ConnectionTab::onErrorOccurred()
     ui->textEdit_Log->moveCursor(QTextCursor::End);
 }
 
-void ConnectionTab::onSendDataRequested(const QByteArray &data)
+void ConnectionTab::onSendDataRequested(const Packet &packet)
 {
     if (socket && socket->state() == QAbstractSocket::ConnectedState)
     {
-        QByteArray packet;
+        Packet packetSend;
 
+        QByteArray data = packet.GetData();
         quint32 size = data.size();
-        quint32 size_be = htonl(size);  // ネットワークバイトオーダーに変換
+        packetSend.Write(size);
+        packetSend.Append(data);
 
-        packet.append(reinterpret_cast<const char*>(&size_be), sizeof(size_be));
-        packet.append(data);
-
-        socket->write(packet);
+        socket->write(packetSend.GetData());
     }
     else
     {
         ui->textEdit_Log->append("<span style='color: red;'>[Error] ソケットが未接続のため送信できません");
+    }
+}
+
+void ConnectionTab::onHeartBeat()
+{
+    // 5秒以上返答がない場合は切断
+    if (lastResponseTimer.isValid() && lastResponseTimer.elapsed() > 5000)
+    {
+        ui->textEdit_Log->append("<span style='color: red;'>[Error] 応答なしのため切断します");
+        socket->disconnectFromHost();
+        return;
+    }
+
+    quint32 cmd = static_cast<quint32>(Command::ID::Respond);
+    Packet packet;
+    packet.Write(cmd);
+
+    onSendDataRequested(packet);
+}
+
+void ConnectionTab::onHeartbeatResponseReceived(const Packet& packet)
+{
+    if (packet.GetData().size() >= 4)
+    {
+        quint32 cmd = 0;
+        Packet copy = packet;
+        copy.Read(cmd);
+
+        if (cmd == static_cast<quint32>(Command::ID::Respond))
+        {
+            lastResponseTimer.restart();
+        }
     }
 }
