@@ -157,23 +157,8 @@ void SearchTab::onDataReceived(const Packet& packet)
         Command::Response responseType = static_cast<Command::Response>(responseTypeId);
         if(responseType == Command::Response::Progress)
         {
-            float progress = 0.0f;
-            data.Read(progress);
-            if(progress < 1.0f)
-            {
-                ui->progressBar->setValue(progress * 100.0f);
-            }
-            else
-            {
-                QApplication::beep();
-                ui->progressBar->setValue(0.0f);
-                FileEnableCase();
-
-                ui->pushButton_Search->setEnabled(true);
-                stopStopwatch();
-
-                nowValueUpdateTimer->start();
-            }
+            handleSearchProgress(data);
+            nowValueUpdateTimer->start();
         }
         else if(responseType == Command::Response::Data)
         {
