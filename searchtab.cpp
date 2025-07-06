@@ -179,6 +179,35 @@ void SearchTab::onDataReceived(const Packet& packet)
 
         tableModel->updateNowValue(address, value);
     }
+    else if (cmdId == Command::ID::ReadMultipleMemory)
+    {
+        quint32 responseTypeId = 0;
+        data.Read(responseTypeId);
+        Command::Response responseType = static_cast<Command::Response>(responseTypeId);
+        if (responseType == Command::Response::Data)
+        {
+            quint32 numRegions = data.Read<quint32>();
+            for (quint32 i = 0; i < numRegions; ++i)
+            {
+                quint32 address = data.Read<quint32>();
+                quint32 size = data.Read<quint32>();
+                // Assuming float for now, need to handle different value types
+                if (size == sizeof(float))
+                {
+                    float value = data.Read<float>();
+                    tableModel->updateNowValue(address, value);
+                }
+                else
+                {
+                    // Skip bytes for other types
+                    for (quint32 j = 0; j < size; ++j)
+                    {
+                        data.Read<quint8>();
+                    }
+                }
+            }
+        }
+    }
 
 }
 
