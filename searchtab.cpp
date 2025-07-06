@@ -110,13 +110,11 @@ void SearchTab::onResetButtonClicked()
 void SearchTab::onDataReceived(const Packet& packet)
 {
     Packet data = packet;
-    quint32 id = 0;
-    data.Read(id);
+    quint32 id = data.Read<quint32>();
     Command::ID cmdId = static_cast<Command::ID>(id);
     if(cmdId == Command::ID::CheckSearchFile)
     {
-        quint32 enable = 0;
-        data.Read(enable);
+        quint32 enable = data.Read<quint32>();
         if(enable != 0)
         {
             FileEnableCase();
@@ -128,13 +126,11 @@ void SearchTab::onDataReceived(const Packet& packet)
     }
     else if(cmdId == Command::ID::DumpForSearch)
     {
-        quint32 responseTypeId = 0;
-        data.Read(responseTypeId);
+        quint32 responseTypeId = data.Read<quint32>();
         Command::Response responseType = static_cast<Command::Response>(responseTypeId);
         if(responseType == Command::Response::Progress)
         {
-            float progress = 0.0f;
-            data.Read(progress);
+            float progress = data.Read<float>();
             if(progress < 1.0f)
             {
                 ui->progressBar->setValue(progress * 100.0f);
@@ -152,49 +148,82 @@ void SearchTab::onDataReceived(const Packet& packet)
     }
     else if(cmdId == Command::ID::UnknownSearch)
     {
-        quint32 responseTypeId = 0;
-        data.Read(responseTypeId);
+        quint32 responseTypeId = data.Read<quint32>();
         Command::Response responseType = static_cast<Command::Response>(responseTypeId);
         if(responseType == Command::Response::Progress)
         {
-            float progress = 0.0f;
-            data.Read(progress);
-            if(progress < 1.0f)
-            {
-                ui->progressBar->setValue(progress * 100.0f);
-            }
-            else
-            {
-                QApplication::beep();
-                ui->progressBar->setValue(0.0f);
-                FileEnableCase();
-
-                ui->pushButton_Search->setEnabled(true);
-                stopStopwatch();
-
-                nowValueUpdateTimer->start();
-            }
+            handleSearchProgress(data);
+            nowValueUpdateTimer->start();
         }
         else if(responseType == Command::Response::Data)
         {
-            quint32 address = 0;
-            data.Read(address);
-            float value = 0.0f;
-            data.Read(value);
+            quint32 address = data.Read<quint32>();
+            float value = data.Read<float>(); // Assuming float for now, need to handle different value types
 
             tableModel->addPair(address, value);
         }
     }
     else if (cmdId == Command::ID::ReadMemory)
     {
-        quint32 address = 0;
-        data.Read(address);
-        float value = 0;
-        data.Read(value);
+        quint32 address = data.Read<quint32>();
+        float value = data.Read<float>();
 
         tableModel->updateNowValue(address, value);
     }
+    else if (cmdId == Command::ID::ReadMultipleMemory)
+    {
+        quint32 responseTypeId = data.Read<quint32>();
+        Command::Response responseType = static_cast<Command::Response>(responseTypeId);
+        if (responseType == Command::Response::Data)
+        {
+            quint32 numRegions = data.Read<quint32>();
+            for (quint32 i = 0; i < numRegions; ++i)
+            {
+                quint32 address = data.Read<quint32>();
+                quint32 size = data.Read<quint32>();
+                // Assuming float for now, need to handle different value types
+                if (size == sizeof(float))
+                {
+                    float value = data.Read<float>();
+                    tableModel->updateNowValue(address, value);
+                }
+                else
+                {
+                    // Skip bytes for other types
+                    for (quint32 j = 0; j < size; ++j)
+                    {
+                        data.Read<quint8>();
+                    }
+                }
+            }
+        }
+    }
+    else if(cmdId == Command::ID::SpecificSearch) // Add this block for SpecificSearch
+    {
+        quint32 responseTypeId = data.Read<quint32>();
+        Command::Response responseType = static_cast<Command::Response>(responseTypeId);
+        if(responseType == Command::Response::Progress)
+        {
+            handleSearchProgress(data);
+            // For SpecificSearch, we might not need to start nowValueUpdateTimer here,
+            // as it's for updating current values of found addresses.
+            // The timer is usually started after a search is complete and results are displayed.
+        }
+        else if(responseType == Command::Response::Data)
+        {
+            quint32 address = data.Read<quint32>();
+            float value = data.Read<float>(); // Assuming float for now, need to handle different value types
 
+            tableModel->addPair(address, value);
+        }
+        else if(responseType == Command::Response::Success) // Handle success response
+        {
+            // Search completed successfully
+            ui->pushButton_Search->setEnabled(true);
+            stopStopwatch();
+            // Optionally, update UI to indicate search completion
+        }
+    }
 }
 
 void SearchTab::onTabOpened()
@@ -225,7 +254,8 @@ void SearchTab::onRequestNowValues()
             Packet cmd;
             cmd.Write(static_cast<quint32>(Command::ID::ReadMemory));
             cmd.Write(address);
-            cmd.Write(address + 4);
+            quint32 valueType = ui->comboBox_ValueType->currentData().toUInt(); // Get the selected ValueType
+            cmd.Write(valueType); // Send the value type
 
             emit sendData(cmd);
         }

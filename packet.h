@@ -13,7 +13,7 @@ public:
     void Write(const T& value);
 
     template<typename T>
-    bool Read(T& value);
+    T Read();
 
     const QByteArray& GetData() const;
     void ResetCursor();
@@ -33,15 +33,15 @@ void Packet::Write(const T& value)
 }
 
 template<typename T>
-bool Packet::Read(T& value)
+T Packet::Read()
 {
     if (cursor + sizeof(T) > static_cast<quint32>(data.size()))
-        return false;
+        throw std::out_of_range("Packet::Read: buffer overflow");
 
     const char* ptr = data.constData() + cursor;
-    value = qFromBigEndian<T>(reinterpret_cast<const uchar*>(ptr));
+    T value = qFromBigEndian<T>(reinterpret_cast<const uchar*>(ptr));
     cursor += sizeof(T);
-    return true;
+    return value;
 }
 
 #endif // PACKET_H
