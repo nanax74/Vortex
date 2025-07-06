@@ -63,7 +63,11 @@ void ConnectionTab::onConnected()
     {
         BOOL flag = TRUE;
         int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag));
-        if (result != 0)
+        if (result == 0)
+        {
+            ui->textEdit_Log->append("<span style='color: green;'>[Info] TCP_NODELAY を有効化しました");
+        }
+        else
         {
             ui->textEdit_Log->append("<span style='color: orange;'>[Warn] TCP_NODELAY 設定失敗");
         }
