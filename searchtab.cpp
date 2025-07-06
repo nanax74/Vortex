@@ -164,10 +164,39 @@ void SearchTab::onDataReceived(const Packet& packet)
         {
             quint32 address = 0;
             data.Read(address);
-            float value = 0.0f;
+            float value = 0.0f; // Assuming float for now, need to handle different value types
             data.Read(value);
 
             tableModel->addPair(address, value);
+        }
+    }
+    else if(cmdId == Command::ID::SpecificSearch) // Add this block for SpecificSearch
+    {
+        quint32 responseTypeId = 0;
+        data.Read(responseTypeId);
+        Command::Response responseType = static_cast<Command::Response>(responseTypeId);
+        if(responseType == Command::Response::Progress)
+        {
+            handleSearchProgress(data);
+            // For SpecificSearch, we might not need to start nowValueUpdateTimer here,
+            // as it's for updating current values of found addresses.
+            // The timer is usually started after a search is complete and results are displayed.
+        }
+        else if(responseType == Command::Response::Data)
+        {
+            quint32 address = 0;
+            data.Read(address);
+            float value = 0.0f; // Assuming float for now, need to handle different value types
+            data.Read(value);
+
+            tableModel->addPair(address, value);
+        }
+        else if(responseType == Command::Response::Success) // Handle success response
+        {
+            // Search completed successfully
+            ui->pushButton_Search->setEnabled(true);
+            stopStopwatch();
+            // Optionally, update UI to indicate search completion
         }
     }
     else if (cmdId == Command::ID::ReadMemory)
