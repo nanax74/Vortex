@@ -57,21 +57,8 @@ void ConnectionTab::onDisconnectButtonClicked()
 
 void ConnectionTab::onConnected()
 {
-    // TCP_NODELAY を設定
-    int fd = static_cast<int>(socket->socketDescriptor());
-    if (fd != -1)
-    {
-        BOOL flag = TRUE;
-        int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag));
-        if (result == 0)
-        {
-            ui->textEdit_Log->append("<span style='color: green;'>[Info] TCP_NODELAY を有効化しました");
-        }
-        else
-        {
-            ui->textEdit_Log->append("<span style='color: orange;'>[Warn] TCP_NODELAY 設定失敗");
-        }
-    }
+    // 低遅延設定
+    socket->socketOption(QAbstractSocket::SocketOption::LowDelayOption);
 
     ui->textEdit_Log->append("<span style='color: green;'>[Info] 接続しました");
     ui->textEdit_Log->moveCursor(QTextCursor::End);
