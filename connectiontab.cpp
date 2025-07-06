@@ -116,9 +116,7 @@ void ConnectionTab::onReadyRead()
         Packet packet(data);
 
         // Dispatch to the correct signal based on command ID
-        quint32 cmdId;
-        Packet tempPacket = packet;
-        tempPacket.Read(cmdId);
+        quint32 cmdId = tempPacket.Read<quint32>();
 
         switch (static_cast<Command::ID>(cmdId))
         {
