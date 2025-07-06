@@ -41,14 +41,10 @@ private:
     QElapsedTimer lastResponseTimer;
 
 signals:
+    void dataReceived(const Packet& packet); // 外部に渡す
+    void dataSent(const Packet& packet); // コンソールに表示するためのシグナル
     void connected();
     void disconnected();
-    void dataSent(const Packet& packet);
-
-    // Command-specific signals
-    void heartbeatResponseReceived(const Packet& packet);
-    void consoleDataReceived(const Packet& packet);
-    void searchDataReceived(const Packet& packet);
 };
 
 #endif // CONNECTIONTAB_H

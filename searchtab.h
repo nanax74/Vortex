@@ -41,7 +41,6 @@ private:
     void FileDisableCase();
     void startStopwatch();
     void stopStopwatch();
-    void handleSearchProgress(Packet& data);
 
 signals:
     void sendData(const Packet& data); // ConnectionTab に渡す用

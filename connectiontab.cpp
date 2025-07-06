@@ -57,8 +57,17 @@ void ConnectionTab::onDisconnectButtonClicked()
 
 void ConnectionTab::onConnected()
 {
-    // Set TCP_NODELAY using Qt's cross-platform API
-    socket->setSocketOption(QAbstractSocket::TcpNoDelay, 1);
+    // TCP_NODELAY を設定
+    int fd = static_cast<int>(socket->socketDescriptor());
+    if (fd != -1)
+    {
+        BOOL flag = TRUE;
+        int result = setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (const char*)&flag, sizeof(flag));
+        if (result != 0)
+        {
+            ui->textEdit_Log->append("<span style='color: orange;'>[Warn] TCP_NODELAY 設定失敗");
+        }
+    }
 
     ui->textEdit_Log->append("<span style='color: green;'>[Info] 接続しました");
     ui->textEdit_Log->moveCursor(QTextCursor::End);
@@ -115,24 +124,7 @@ void ConnectionTab::onReadyRead()
 
         Packet packet(data);
 
-        // Dispatch to the correct signal based on command ID
-        quint32 cmdId = tempPacket.Read<quint32>();
-
-        switch (static_cast<Command::ID>(cmdId))
-        {
-            case Command::ID::Respond:
-                emit heartbeatResponseReceived(packet);
-                break;
-            case Command::ID::CheckSearchFile:
-            case Command::ID::DumpForSearch:
-            case Command::ID::UnknownSearch:
-            case Command::ID::ReadMemory:
-                emit searchDataReceived(packet);
-                break;
-            default:
-                emit consoleDataReceived(packet);
-                break;
-        }
+        emit dataReceived(packet);
     }
 }
 
