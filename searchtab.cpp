@@ -239,7 +239,8 @@ void SearchTab::onRequestNowValues()
             Packet cmd;
             cmd.Write(static_cast<quint32>(Command::ID::ReadMemory));
             cmd.Write(address);
-            cmd.Write(address + 4);
+            quint32 valueType = ui->comboBox_ValueType->currentData().toUInt(); // Get the selected ValueType
+            cmd.Write(valueType); // Send the value type
 
             emit sendData(cmd);
         }
