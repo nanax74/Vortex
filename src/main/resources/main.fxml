@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.vortex.controller.MainController">
+    <TabPane fx:id="tabPane">
+        <Tab text="Connection" fx:id="connectionTab"/>
+    </TabPane>
+</VBox>
