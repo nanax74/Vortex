@@ -1,40 +1,82 @@
-# Compiled class files
-*.class
+# This file is used to ignore files which are generated
+# ----------------------------------------------------------------------------
 
-# Log files
-*.log
+*~
+*.autosave
+*.a
+*.core
+*.moc
+*.o
+*.obj
+*.orig
+*.rej
+*.so
+*.so.*
+*_pch.h.cpp
+*_resource.rc
+*.qm
+.#*
+*.*#
+core
+!core/
+tags
+.DS_Store
+.directory
+*.debug
+Makefile*
+*.prl
+*.app
+moc_*.cpp
+ui_*.h
+qrc_*.cpp
+Thumbs.db
+*.res
+*.rc
+/.qmake.cache
+/.qmake.stash
 
-# BlueJ files
-*.ctxt
+# qtcreator generated files
+*.pro.user*
+*.qbs.user*
+CMakeLists.txt.user*
 
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+# xemacs temporary files
+*.flc
 
-# Package Files #
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
+# Vim temporary files
+.*.swp
 
-# virtual machine crash logs
-hs_err_pid*
+# Visual Studio generated files
+*.ib_pdb_index
+*.idb
+*.ilk
+*.pdb
+*.sln
+*.suo
+*.vcproj
+*vcproj.*.*.user
+*.ncb
+*.sdf
+*.opensdf
+*.vcxproj
+*vcxproj.*
 
-# IntelliJ IDEA
-.idea/
-*.iml
-out/
+# MinGW generated files
+*.Debug
+*.Release
 
-# Maven
-target/
+# Python byte code
+*.pyc
 
-# Gradle
-.gradle/
-build/
+# Binaries
+# --------
+*.dll
+*.exe
 
-# Eclipse
-.project
-.classpath
-.settings/
+# Directories with generated files
+.moc/
+.obj/
+.pch/
+.rcc/
+.uic/
+/build*/
