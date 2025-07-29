@@ -12,6 +12,8 @@ import java.util.List;
 
 public class ConnectionTabController
 {
+    public LoggerTabController loggerTabController;
+
     private Client client;
     private final int PORT = 50000;
     private Thread receiveThread;
@@ -24,8 +26,6 @@ public class ConnectionTabController
     private Button disconnectButton;
     @FXML
     private HexTextField inputField;
-    @FXML
-    private TextArea logArea;
 
     @FXML
     private void initialize()
@@ -39,7 +39,7 @@ public class ConnectionTabController
         String ip = ipField.getText().trim();
         if (ip.isEmpty())
         {
-            logArea.appendText("IPアドレスを入力してください\n");
+            log("IPアドレスを入力してください");
             return;
         }
 
@@ -51,7 +51,7 @@ public class ConnectionTabController
 
                 Platform.runLater(() ->
                 {
-                    logArea.appendText("接続成功: " + ip + ":" + PORT + "\n");
+                    log("接続成功: " + ip + ":" + PORT);
                     connectButton.setDisable(true);
                     disconnectButton.setDisable(false);
                 });
@@ -62,7 +62,7 @@ public class ConnectionTabController
             }
             catch (IOException e)
             {
-                Platform.runLater(() -> logArea.appendText("接続失敗: " + e.getMessage() + "\n"));
+                Platform.runLater(() -> log("接続失敗: " + e.getMessage()));
             }
         }).start();
     }
@@ -75,11 +75,11 @@ public class ConnectionTabController
             try
             {
                 client.disconnect();
-                logArea.appendText("切断成功\n");
+                log("切断成功");
             }
             catch (IOException e)
             {
-                Platform.runLater(() -> logArea.appendText("切断エラー: " + e.getMessage() + "\n"));
+                Platform.runLater(() -> log("切断エラー: " + e.getMessage()));
             }
             finally
             {
@@ -113,13 +113,13 @@ public class ConnectionTabController
                 }
                 Platform.runLater(() ->
                 {
-                    logArea.appendText("送信: " + sb + "\n");
+                    log("送信: " + sb);
                     inputField.clear();
                 });
             }
             catch (IOException e)
             {
-                Platform.runLater(() -> logArea.appendText("送信エラー: " + e.getMessage() + "\n"));
+                Platform.runLater(() -> log("送信エラー: " + e.getMessage()));
             }
         }).start();
     }
@@ -141,18 +141,18 @@ public class ConnectionTabController
                     sb.append(String.format("%02X", d));
                 }
 
-                String log = "受信: " + sb + "\n";
-                Platform.runLater(() -> logArea.appendText(log));
+                String log = "受信: " + sb;
+                Platform.runLater(() -> log(log));
             }
         }
         catch (IOException e)
         {
-            Platform.runLater(() -> logArea.appendText("受信エラー: " + e.getMessage() + "\n"));
+            Platform.runLater(() -> log("受信エラー: " + e.getMessage()));
         }
     }
 
     public void log(String msg)
     {
-        logArea.appendText(msg + "\n");
+        loggerTabController.append(msg);
     }
 }

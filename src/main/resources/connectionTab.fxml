@@ -23,5 +23,4 @@
 
     <HexTextField fx:id="inputField" promptText="Command" />
     <Button maxWidth="1.7976931348623157E308" onAction="#onSendClicked" text="Send" />
-    <TextArea fx:id="logArea" editable="false" />
 </VBox>

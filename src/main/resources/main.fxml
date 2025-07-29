@@ -2,10 +2,11 @@
 
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
+<?import com.vortex.controls.DraggableTabPane?>
 
-<VBox xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.vortex.controller.MainController">
-    <TabPane fx:id="tabPane">
-        <Tab text="Connection" fx:id="connectionTab"/>
-    </TabPane>
+<VBox xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/17.0.12" fx:controller="com.vortex.controller.MainController">
+    <MenuBar>
+        <Menu fx:id="tabMenu" text="タブ" />
+    </MenuBar>
+    <DraggableTabPane fx:id="tabPane"/>
 </VBox>

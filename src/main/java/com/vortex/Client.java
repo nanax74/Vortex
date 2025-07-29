@@ -114,6 +114,8 @@ public class Client
 
     public Packet getPacket(byte[] data)
     {
-        return new Packet(socket, data);
+        Packet p = new Packet(socket);
+        p.writeBytes(data);
+        return p;
     }
 }
