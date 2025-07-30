@@ -3,6 +3,8 @@ package com.vortex.controls;
 
 import javafx.application.Platform;
 import javafx.collections.ListChangeListener;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseEvent;
@@ -194,19 +196,35 @@ public class DraggableTabPane extends TabPane
 
     private int getInsertionIndex(double screenX)
     {
-        double localX = screenX - localToScreen(0, 0).getX();
-        double totalWidth = 0;
-        for (int i = 0; i < getTabs().size(); i++)
-        {
-            totalWidth += 100; // 仮想的なタブ幅
-            if (localX < totalWidth)
-            {
-                return i;
-            }
-        }
-        return getTabs().size();
-    }
+        int index = 0;
 
+        // タブヘッダ（タブラベル）のノードをすべて取得
+        for (Node node : this.lookupAll(".tab"))
+        {
+            if (!node.isVisible())
+            {
+                continue; // 非表示のものはスキップ
+            }
+
+            Bounds bounds = node.localToScreen(node.getBoundsInLocal());
+            if (bounds == null)
+            {
+                continue; // 表示前だと null の可能性がある
+            }
+
+            double midX = (bounds.getMinX() + bounds.getMaxX()) / 2;
+
+            // screenX がこのタブの中央より左ならこの位置に挿入
+            if (screenX < midX)
+            {
+                return index;
+            }
+
+            index++;
+        }
+
+        return index; // 最後尾
+    }
 
     public void setOnTabClosed(Consumer<Tab> handler)
     {

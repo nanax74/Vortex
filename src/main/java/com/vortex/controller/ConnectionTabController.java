@@ -1,14 +1,15 @@
 package com.vortex.controller;
 
-import com.vortex.Client;
+import com.vortex.data.Client;
 import com.vortex.controls.HexTextField;
-import com.vortex.data.Packet;
+import com.vortex.data.PacketDispatcher;
+import com.vortex.data.ReadablePacket;
+import com.vortex.data.WritablePacket;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 
 import java.io.*;
-import java.util.List;
 
 public class ConnectionTabController
 {
@@ -96,14 +97,14 @@ public class ConnectionTabController
     private void onSendClicked()
     {
         byte[] command = inputField.getBytes();
-        Packet packet = client.getPacket(command);
+        WritablePacket packet = new WritablePacket(command);
 
         new Thread(() ->
         {
             try
             {
                 // 送信
-                packet.send();
+                client.sendPacket(packet);
 
                 // ログ
                 StringBuilder sb = new StringBuilder();
@@ -126,29 +127,33 @@ public class ConnectionTabController
 
     private void receiveLoop()
     {
-        try
+        Thread thread = new Thread(() ->
         {
-            List<Packet> packets = client.receivePackets();
-
-            for (Packet packet : packets)
+            try
             {
-                byte[] data = packet.toByteArray(); // Packetからバイト列を取得
-
-                // ログ出力用にHex文字列を作成
-                StringBuilder sb = new StringBuilder();
-                for (byte d : data)
+                while (true) // 常に受信
                 {
-                    sb.append(String.format("%02X", d));
-                }
+                    ReadablePacket packet = client.receivePacket();
+                    PacketDispatcher.dispatch(packet);
 
-                String log = "受信: " + sb;
-                Platform.runLater(() -> log(log));
+                    byte[] data = packet.toByteArray();
+                    StringBuilder sb = new StringBuilder();
+                    for (byte d : data)
+                    {
+                        sb.append(String.format("%02X", d));
+                    }
+
+                    String log = "受信: " + sb;
+                    Platform.runLater(() -> log(log));
+                }
             }
-        }
-        catch (IOException e)
-        {
-            Platform.runLater(() -> log("受信エラー: " + e.getMessage()));
-        }
+            catch (IOException e)
+            {
+                Platform.runLater(() -> log("受信エラー: " + e.getMessage()));
+            }
+        });
+        thread.setDaemon(true); // アプリ終了時にスレッドも終了
+        thread.start();
     }
 
     public void log(String msg)

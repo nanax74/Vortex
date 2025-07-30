@@ -1,10 +1,28 @@
 package com.vortex.controller;
 
+import com.vortex.data.PacketDispatcher;
+import com.vortex.data.ReadablePacket;
 import javafx.fxml.FXML;
 import javafx.scene.control.TextArea;
 
-public class LoggerTabController
+import java.io.IOException;
+
+public class LoggerTabController implements PacketDispatcher.Listener
 {
+    public void onPacketReceived(ReadablePacket packet) throws IOException
+    {
+        if(packet.readInt() == 0x1)
+        {
+            append("Read Success");
+        }
+    }
+
+    @FXML
+    private void initialize()
+    {
+        PacketDispatcher.addListener(this);
+    }
+
     @FXML private TextArea logArea;
 
     @FXML

@@ -11,8 +11,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class MainController
 {
@@ -42,7 +40,14 @@ public class MainController
         loggerTab.setClosable(true);
         LoggerTabController loggerTabController = loader.getController();
 
-        tabPane.getTabs().addAll(connectionTab, loggerTab);
+        loader = new FXMLLoader(getClass().getResource("/searchTab.fxml"));
+        content = loader.load();
+        Tab searchTab = new Tab("Search");
+        searchTab.setContent(content);
+        searchTab.setClosable(true);
+        SearchTabController searchTabController = loader.getController();
+
+        tabPane.getTabs().addAll(connectionTab, loggerTab, searchTab);
         tabPane.setMainPane(true);
         tabPane.setOnTabClosed(this::onTabClosed);  // 重要
 
