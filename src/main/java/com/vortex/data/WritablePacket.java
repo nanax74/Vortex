@@ -53,6 +53,16 @@ public class WritablePacket
         dataOut.writeLong(value);
     }
 
+    public void writeFloat(float value) throws IOException
+    {
+        dataOut.writeFloat(value);
+    }
+
+    public void writeDouble(double value) throws IOException
+    {
+        dataOut.writeDouble(value);
+    }
+
     public void writeByteArray(byte[] data) throws IOException
     {
         if (data == null)

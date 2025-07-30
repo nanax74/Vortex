@@ -14,8 +14,12 @@ import java.io.*;
 public class ConnectionTabController
 {
     public LoggerTabController loggerTabController;
+    public void log(String msg)
+    {
+        loggerTabController.append(msg);
+    }
 
-    private Client client;
+    public Client client;
     private final int PORT = 50000;
     private Thread receiveThread;
 
@@ -27,12 +31,6 @@ public class ConnectionTabController
     private Button disconnectButton;
     @FXML
     private HexTextField inputField;
-
-    @FXML
-    private void initialize()
-    {
-        client = new Client();
-    }
 
     @FXML
     private void onConnectClicked()
@@ -105,18 +103,6 @@ public class ConnectionTabController
             {
                 // 送信
                 client.sendPacket(packet);
-
-                // ログ
-                StringBuilder sb = new StringBuilder();
-                for (byte c : command)
-                {
-                    sb.append(String.format("%02X", c));
-                }
-                Platform.runLater(() ->
-                {
-                    log("送信: " + sb);
-                    inputField.clear();
-                });
             }
             catch (IOException e)
             {
@@ -135,16 +121,6 @@ public class ConnectionTabController
                 {
                     ReadablePacket packet = client.receivePacket();
                     PacketDispatcher.dispatch(packet);
-
-                    byte[] data = packet.toByteArray();
-                    StringBuilder sb = new StringBuilder();
-                    for (byte d : data)
-                    {
-                        sb.append(String.format("%02X", d));
-                    }
-
-                    String log = "受信: " + sb;
-                    Platform.runLater(() -> log(log));
                 }
             }
             catch (IOException e)
@@ -154,10 +130,5 @@ public class ConnectionTabController
         });
         thread.setDaemon(true); // アプリ終了時にスレッドも終了
         thread.start();
-    }
-
-    public void log(String msg)
-    {
-        loggerTabController.append(msg);
     }
 }

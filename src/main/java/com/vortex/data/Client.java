@@ -1,5 +1,8 @@
 package com.vortex.data;
 
+import com.vortex.controller.LoggerTabController;
+import javafx.application.Platform;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -8,6 +11,38 @@ import java.net.Socket;
 
 public class Client
 {
+    public LoggerTabController loggerTabController;
+    private void log(String msg)
+    {
+        loggerTabController.append(msg);
+    }
+
+    private void logSend(WritablePacket packet)
+    {
+        byte[] data = packet.toByteArray();
+        StringBuilder sb = new StringBuilder();
+        for (byte d : data)
+        {
+            sb.append(String.format("%02X", d));
+        }
+
+        String log = "送信: " + sb;
+        Platform.runLater(() -> log(log));
+    }
+
+    private void logReceive(ReadablePacket packet)
+    {
+        byte[] data = packet.toByteArray();
+        StringBuilder sb = new StringBuilder();
+        for (byte d : data)
+        {
+            sb.append(String.format("%02X", d));
+        }
+
+        String log = "受信: " + sb;
+        Platform.runLater(() -> log(log));
+    }
+
     private Socket socket;
     private InputStream input;
     private OutputStream output;
@@ -29,6 +64,7 @@ public class Client
 
         socket = new Socket();
         socket.connect(new InetSocketAddress(host, port), timeoutMillis);
+        socket.setTcpNoDelay(true);
         input = socket.getInputStream();
         output = socket.getOutputStream();
     }
@@ -44,6 +80,7 @@ public class Client
             {
                 throw new IOException("接続されていません");
             }
+            logSend(packet);
             packet.send(output);
         }
     }
@@ -59,7 +96,9 @@ public class Client
             {
                 throw new IOException("接続されていません");
             }
-            return ReadablePacket.receive(input);
+            ReadablePacket packet = ReadablePacket.receive(input);
+            logReceive(packet);
+            return packet;
         }
     }
 

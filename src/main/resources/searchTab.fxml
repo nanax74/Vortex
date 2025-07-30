@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import java.lang.*?>
-<?import java.util.*?>
-<?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
 <VBox prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vortex.controller.SearchTabController">
-    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Clear" onAction="#onSearchClicked" />
+    <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="5.0" VBox.vgrow="ALWAYS">
+        <ProgressBar fx:id="searchProgressBar" maxWidth="1.7976931348623157E308" progress="0.0" HBox.hgrow="ALWAYS" />
+        <Label fx:id="searchProgressLabel" text="0.0%" textAlignment="CENTER" />
+    </HBox>
+    <Button fx:id="searchButton" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#onSearchOrDumpClicked" text="Search" />
 </VBox>

@@ -80,6 +80,16 @@ public class ReadablePacket
         return dataIn.readLong();
     }
 
+    public float readFloat() throws IOException
+    {
+        return dataIn.readFloat();
+    }
+
+    public double readDouble() throws IOException
+    {
+        return dataIn.readDouble();
+    }
+
     public byte[] readByteArray(int length) throws IOException
     {
         byte[] buffer = new byte[length];

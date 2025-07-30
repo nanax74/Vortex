@@ -11,10 +11,7 @@ public class LoggerTabController implements PacketDispatcher.Listener
 {
     public void onPacketReceived(ReadablePacket packet) throws IOException
     {
-        if(packet.readInt() == 0x1)
-        {
-            append("Read Success");
-        }
+
     }
 
     @FXML

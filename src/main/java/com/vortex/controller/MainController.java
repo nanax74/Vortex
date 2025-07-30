@@ -1,6 +1,7 @@
 package com.vortex.controller;
 
 import com.vortex.controls.DraggableTabPane;
+import com.vortex.data.Client;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -25,6 +26,7 @@ public class MainController
     {
         FXMLLoader loader;
         VBox content;
+        Client client = new Client();
 
         loader = new FXMLLoader(getClass().getResource("/connectionTab.fxml"));
         content = loader.load();
@@ -51,7 +53,20 @@ public class MainController
         tabPane.setMainPane(true);
         tabPane.setOnTabClosed(this::onTabClosed);  // 重要
 
+        client.loggerTabController = loggerTabController;
         connectionTabController.loggerTabController = loggerTabController;
+        searchTabController.loggerTabController = loggerTabController;
+
+        connectionTabController.client = client;
+        searchTabController.client = client;
+
+        searchTab.selectedProperty().addListener((obs, oldVal, newVal) ->
+        {
+            if (newVal)
+            {
+                searchTabController.onSelected();
+            }
+        });
 
         Platform.runLater(() ->
         {
