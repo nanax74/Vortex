@@ -25,6 +25,8 @@ public class DraggableTabPane extends TabPane
     private Consumer<Tab> onTabClosed;
     private boolean isMainPane = false;
 
+    private boolean suppressTabClosed = false;
+
     public DraggableTabPane()
     {
         allTabPanes.put(this, true);
@@ -43,7 +45,7 @@ public class DraggableTabPane extends TabPane
                     {
                         added.setOnCloseRequest(e ->
                         {
-                            if (onTabClosed != null)
+                            if (!suppressTabClosed && onTabClosed != null)
                             {
                                 onTabClosed.accept(added);
                             }
@@ -95,46 +97,55 @@ public class DraggableTabPane extends TabPane
             previewStage = null;
         }
 
+        double screenX = event.getScreenX();
         DraggableTabPane targetPane = null;
+
         for (DraggableTabPane pane : allTabPanes.keySet())
         {
-            if (pane.getScene().getWindow().isShowing() && pane.localToScreen(pane.getBoundsInLocal()).contains(event.getScreenX(), event.getScreenY()))
+            if (pane.getScene().getWindow().isShowing() && pane.localToScreen(pane.getBoundsInLocal()).contains(screenX, event.getScreenY()))
             {
                 targetPane = pane;
                 break;
             }
         }
 
-        final Tab dragged = draggedTab;
+        final Tab finalDraggedTab = draggedTab;
+        final DraggableTabPane finalTargetPane = targetPane;
 
-        if (targetPane != null && targetPane != this)
+        if (targetPane == this)
         {
-            getTabs().remove(draggedTab);
-            targetPane.getTabs().add(draggedTab);
-            final DraggableTabPane finalTargetPane = targetPane;
-            Platform.runLater(() -> finalTargetPane.getSelectionModel().select(dragged));
-        }
-        else if (targetPane == this)
-        {
-            // 同じ TabPane 内で並び替え
-            int targetIndex = getInsertionIndex(event.getScreenX());
-            int currentIndex = getTabs().indexOf(draggedTab);
-            if (targetIndex != currentIndex)
+            // 同じ TabPane にドロップされた場合の並び替え処理
+            int fromIndex = getTabs().indexOf(draggedTab);
+            int toIndex = getInsertionIndex(screenX);
+
+            if (toIndex == fromIndex || toIndex == fromIndex + 1)
             {
-                getTabs().remove(draggedTab);
-                if (targetIndex > getTabs().size())
-                {
-                    getTabs().add(draggedTab);
-                }
-                else
-                {
-                    getTabs().add(targetIndex, draggedTab);
-                }
-                Platform.runLater(() -> getSelectionModel().select(dragged));
+                // 自分自身にドロップしただけなら何もしない
+                draggedTab = null;
+                return;
             }
+
+            // 並び替え
+            getTabs().remove(draggedTab);
+            if (toIndex > getTabs().size())
+            {
+                toIndex = getTabs().size();
+            }
+            getTabs().add(toIndex, draggedTab);
+            Platform.runLater(() -> getSelectionModel().select(finalDraggedTab));
+        }
+        else if (targetPane != null)
+        {
+            // 他の TabPane に移動
+            suppressTabClosed = true;
+            this.getTabs().remove(draggedTab);
+            suppressTabClosed = false;
+            targetPane.getTabs().add(draggedTab);
+            Platform.runLater(() -> finalTargetPane.getSelectionModel().select(finalDraggedTab));
         }
         else
         {
+            // 新しいウィンドウに分離
             DraggableTabPane newPane = new DraggableTabPane();
             newPane.setMainPane(false);
             newPane.setOnTabClosed(onTabClosed);
@@ -144,13 +155,15 @@ public class DraggableTabPane extends TabPane
             detachedStages.add(newStage);
             getTabs().remove(draggedTab);
 
-            newStage.show(); // ここでウィンドウを表示
+            newStage.show();
+
+            // ウィンドウ表示後に選択状態にする
             Platform.runLater(() ->
             {
-                newPane.getSelectionModel().select(dragged);
-                if (dragged.getContent() != null)
+                newPane.getSelectionModel().select(finalDraggedTab);
+                if (finalDraggedTab.getContent() != null)
                 {
-                    dragged.getContent().requestFocus();
+                    finalDraggedTab.getContent().requestFocus();
                 }
             });
         }
@@ -162,7 +175,7 @@ public class DraggableTabPane extends TabPane
     {
         Stage newStage = new Stage();
         newStage.setTitle("Vortex Tab");
-        newStage.setScene(new Scene(newPane, 400, 300));
+        newStage.setScene(new Scene(newPane, 854, 480));
         newStage.setX(event.getScreenX());
         newStage.setY(event.getScreenY());
 

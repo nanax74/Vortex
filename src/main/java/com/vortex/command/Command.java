@@ -13,6 +13,8 @@ public enum Command
     UnknownSearch(0x12),
     ClearSearchFile(0x13),
     CheckSearchFile(0x14),
+    GetSearchResults(0x15),
+    GetSearchResultsCount(0x16),
 
     // 応答要求(切断検出用)
     Respond(0x1000),

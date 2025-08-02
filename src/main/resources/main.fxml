@@ -8,5 +8,5 @@
     <MenuBar>
         <Menu fx:id="tabMenu" text="タブ" />
     </MenuBar>
-    <DraggableTabPane fx:id="tabPane"/>
+    <DraggableTabPane fx:id="tabPane" VBox.vgrow="ALWAYS" maxHeight="Infinity"/>
 </VBox>

@@ -16,7 +16,7 @@ public class ConnectionTabController
     public LoggerTabController loggerTabController;
     public void log(String msg)
     {
-        loggerTabController.append(msg);
+        Platform.runLater(() -> loggerTabController.append(msg));
     }
 
     public Client client;

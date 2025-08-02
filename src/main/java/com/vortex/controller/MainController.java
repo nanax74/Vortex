@@ -8,6 +8,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -30,6 +31,7 @@ public class MainController
 
         loader = new FXMLLoader(getClass().getResource("/connectionTab.fxml"));
         content = loader.load();
+        VBox.setVgrow(content, Priority.ALWAYS);
         Tab connectionTab = new Tab("Connect");
         connectionTab.setContent(content);
         connectionTab.setClosable(true);
@@ -37,6 +39,7 @@ public class MainController
 
         loader = new FXMLLoader(getClass().getResource("/loggerTab.fxml"));
         content = loader.load();
+        VBox.setVgrow(content, Priority.ALWAYS);
         Tab loggerTab = new Tab("Logger");
         loggerTab.setContent(content);
         loggerTab.setClosable(true);
@@ -44,6 +47,7 @@ public class MainController
 
         loader = new FXMLLoader(getClass().getResource("/searchTab.fxml"));
         content = loader.load();
+        VBox.setVgrow(content, Priority.ALWAYS);
         Tab searchTab = new Tab("Search");
         searchTab.setContent(content);
         searchTab.setClosable(true);
