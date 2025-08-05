@@ -1,5 +1,9 @@
 package com.vortex.command;
 
+import com.vortex.controller.SearchTabController;
+
+import java.lang.invoke.VarHandle;
+
 public enum ValueType
 {
     Int8(0),

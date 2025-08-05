@@ -35,6 +35,12 @@ public class ConnectionTabController
     private HexTextField inputField;
 
     @FXML
+    private void initialize()
+    {
+        inputField.setMaxLength(Integer.MAX_VALUE);
+    }
+
+    @FXML
     private void onConnectClicked()
     {
         String ip = ipField.getText().trim();

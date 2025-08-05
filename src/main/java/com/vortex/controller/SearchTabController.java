@@ -3,6 +3,7 @@ package com.vortex.controller;
 import com.vortex.command.*;
 import com.vortex.controls.HexTextField;
 import com.vortex.data.*;
+import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -15,8 +16,10 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.CheckBox;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.util.Duration;
 
 import java.awt.*;
 import java.io.IOException;
@@ -36,10 +39,27 @@ public class SearchTabController implements PacketDispatcher.Listener
 
     public Client client;
 
+    public Tab tab;
+
     private Bool isExistFile = Bool.False;
 
     ObservableList<SearchResult> searchResults = FXCollections.observableArrayList();
     private final List<SearchResult> tempResults = new ArrayList<>();
+
+    public static class SearchResultUtil
+    {
+        public static SearchResult findByAddress(ObservableList<SearchResult> list, int address)
+        {
+            for (SearchResult result : list)
+            {
+                if (result.getAddress() == address)
+                {
+                    return result;
+                }
+            }
+            return null; // 見つからなかった場合
+        }
+    }
 
     private long searchStartTime = 0L;
     private Timeline stopwatchTimeline;
@@ -75,16 +95,16 @@ public class SearchTabController implements PacketDispatcher.Listener
     private HexTextField valueWriteField;
 
     @FXML
-    private Button valueWriteButton;
-
-    @FXML
     private TableView<SearchResult> searchResultsView;
 
     @FXML
     private TableColumn<SearchResult, Integer> addressColumn;
 
     @FXML
-    private TableColumn<SearchResult, Integer> valueColumn;
+    private TableColumn<SearchResult, String> valueColumn;
+
+    @FXML
+    private CheckBox autoUpdateCheckBox;
 
     @FXML
     private Button searchButton;
@@ -102,6 +122,23 @@ public class SearchTabController implements PacketDispatcher.Listener
 
         searchTypeComboBox.getItems().addAll(SearchType.Specific, SearchType.Unknown);
         searchTypeComboBox.setValue(SearchType.Specific);
+        searchTypeComboBox.valueProperty().addListener((observable, oldValue, newValue) ->
+        {
+            Platform.runLater(() ->
+            {
+                switch (newValue)
+                {
+                    case Specific ->
+                    {
+                        valueField.setDisable(false);
+                    }
+                    case Unknown ->
+                    {
+                        valueField.setDisable(true);
+                    }
+                }
+            });
+        });
 
         valueTypeComboBox.getItems().addAll(ValueType.values());
         valueTypeComboBox.setValue(ValueType.Float);
@@ -162,7 +199,7 @@ public class SearchTabController implements PacketDispatcher.Listener
         });
 
         addressColumn.setCellValueFactory(cellData -> cellData.getValue().addressProperty().asObject());
-        valueColumn.setCellValueFactory(cellData -> cellData.getValue().valueProperty().asObject());
+        valueColumn.setCellValueFactory(cellData -> cellData.getValue().hexValueProperty());
 
         addressColumn.setCellFactory(column -> new TableCell<>()
         {
@@ -178,19 +215,28 @@ public class SearchTabController implements PacketDispatcher.Listener
             }
         });
 
-        valueColumn.setCellFactory(column -> new TableCell<>()
+        valueColumn.setCellFactory(column -> new TableCell<SearchResult, String>()
         {
             {
                 setAlignment(Pos.CENTER);
             }
 
             @Override
-            protected void updateItem(Integer item, boolean empty)
+            protected void updateItem(String item, boolean empty)
             {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("0x%08X", item));
+                if (empty || item == null)
+                {
+                    setText(null);
+                }
+                else
+                {
+                    // item は16進文字列（例: "0A3F"）なので、整形して表示する例
+                    setText("0x" + item);
+                }
             }
         });
+
 
         searchResultsView.setItems(searchResults);
 
@@ -237,8 +283,44 @@ public class SearchTabController implements PacketDispatcher.Listener
         });
 
         // 0.01秒ごとに更新
-        stopwatchTimeline = new Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.millis(10), e -> updateStopwatchLabel()));
+        stopwatchTimeline = new Timeline(new KeyFrame(Duration.millis(10), e -> updateStopwatchLabel()));
         stopwatchTimeline.setCycleCount(Timeline.INDEFINITE); // 無限に繰り返す
+
+        Timeline autoUpdateTimeline = new Timeline(new KeyFrame(Duration.millis(100), e -> updateSearchResultsValue()));
+        autoUpdateTimeline.setCycleCount(Timeline.INDEFINITE);
+        autoUpdateTimeline.play();
+    }
+
+    private void updateSearchResultsValue()
+    {
+        if (tab.isSelected() && autoUpdateCheckBox.isSelected())
+        {
+            try
+            {
+                ObservableList<SearchResult> items = searchResultsView.getItems();
+
+                if (items.isEmpty())
+                {
+                    return;
+                }
+
+                WritablePacket packet = new WritablePacket();
+                packet.writeInt(Command.ReadMultipleMemory.getValue());
+                packet.writeInt(valueTypeComboBox.getValue().getValue());
+                packet.writeInt(items.size()); // アドレスの数
+
+                for (SearchResult item : items)
+                {
+                    int address = item.getAddress();
+                    packet.writeInt(address);
+                }
+                client.sendPacket(packet);
+            }
+            catch (Exception ex)
+            {
+                log(ex.getMessage());
+            }
+        }
     }
 
     private MenuItem createCopyValueItem(TableRow<SearchResult> row)
@@ -251,7 +333,7 @@ public class SearchTabController implements PacketDispatcher.Listener
             {
                 Clipboard clipboard = Clipboard.getSystemClipboard();
                 ClipboardContent content = new ClipboardContent();
-                content.putString(format("0x%08X", entry.getValue()));
+                content.putString("0x" + entry.getHexValue());
                 clipboard.setContent(content);
             }
         });
@@ -288,7 +370,74 @@ public class SearchTabController implements PacketDispatcher.Listener
         {
             // コマンドID
             int commandId = packet.readInt();
-            if (commandId == Command.DumpForSearch.getValue())
+            if (commandId == Command.ReadMultipleMemory.getValue())
+            {
+                int responseId = packet.readInt();
+                if (responseId == Response.Data.getValue())
+                {
+                    int valueType = packet.readInt();
+                    int addressesCount = packet.readInt();
+                    for (int i = 0; i < addressesCount; ++i)
+                    {
+                        int address = packet.readInt();
+                        if (valueType == ValueType.Int8.getValue() || valueType == ValueType.UInt8.getValue())
+                        {
+                            byte value = packet.readByte();
+                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
+                            if (result != null)
+                            {
+                                result.setByte(value);
+                            }
+                        }
+                        else if (valueType == ValueType.Int16.getValue() || valueType == ValueType.UInt16.getValue())
+                        {
+                            short value = packet.readShort();
+                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
+                            if (result != null)
+                            {
+                                result.setShort(value);
+                            }
+                        }
+                        else if (valueType == ValueType.Int32.getValue() || valueType == ValueType.UInt32.getValue())
+                        {
+                            int value = packet.readInt();
+                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
+                            if (result != null)
+                            {
+                                result.setInt(value);
+                            }
+                        }
+                        else if (valueType == ValueType.Int64.getValue() || valueType == ValueType.UInt64.getValue())
+                        {
+                            long value = packet.readLong();
+                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
+                            if (result != null)
+                            {
+                                result.setLong(value);
+                            }
+                        }
+                        else if (valueType == ValueType.Float.getValue())
+                        {
+                            float value = packet.readFloat();
+                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
+                            if (result != null)
+                            {
+                                result.setFloat(value);
+                            }
+                        }
+                        else if (valueType == ValueType.Double.getValue())
+                        {
+                            double value = packet.readDouble();
+                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
+                            if (result != null)
+                            {
+                                result.setDouble(value);
+                            }
+                        }
+                    }
+                }
+            }
+            else if (commandId == Command.DumpForSearch.getValue())
             {
                 int responseId = packet.readInt();
                 if (responseId == Response.Progress.getValue())
@@ -368,6 +517,10 @@ public class SearchTabController implements PacketDispatcher.Listener
                         searchProgressBar.setProgress(0.0f);
                         searchProgressLabel.setText(format("%.1f%%", 0.0f));
                         searchButton.setDisable(false);
+                        if (searchTypeComboBox.getValue() == SearchType.Specific)
+                        {
+                            valueField.setDisable(false);
+                        }
 
                         Toolkit.getDefaultToolkit().beep();
                     });
@@ -557,7 +710,7 @@ public class SearchTabController implements PacketDispatcher.Listener
                         WritablePacket packet = new WritablePacket();
                         packet.writeInt(Command.SpecificSearch.getValue());
                         packet.writeInt(comparisonComboBox.getValue().getValue());
-                        writePacketValueFromHexField(packet); // 任意の型の値を書き込み
+                        writePacketValueFromHexField(packet, valueField); // 任意の型の値を書き込み
                         client.sendPacket(packet);
                     }
                 }
@@ -601,13 +754,13 @@ public class SearchTabController implements PacketDispatcher.Listener
         {
             ObservableList<String> selectedItems = selectedAddressesView.getItems();
             int[] addresses = selectedItems.stream().mapToInt(s -> Integer.parseInt(s.replace("0x", ""), 16)).toArray();
-            for(int address : addresses)
+            for (int address : addresses)
             {
                 WritablePacket packet = new WritablePacket();
                 packet.writeInt(Command.WriteMemory.getValue());
                 packet.writeInt(address);
-                packet.writeInt(ValueType.Int32.getValue());
-                packet.writeInt(valueWriteField.getIntValue());
+                packet.writeInt(valueTypeComboBox.getValue().getValue());
+                writePacketValueFromHexField(packet, valueWriteField);
                 client.sendPacket(packet);
             }
         }
@@ -653,7 +806,7 @@ public class SearchTabController implements PacketDispatcher.Listener
         }
     }
 
-    private void writePacketValueFromHexField(WritablePacket packet)
+    private void writePacketValueFromHexField(WritablePacket packet, HexTextField hexField)
     {
         try
         {
@@ -661,23 +814,23 @@ public class SearchTabController implements PacketDispatcher.Listener
             {
                 case Int8, UInt8 ->
                 {
-                    packet.writeByte(valueField.getByteValue());
+                    packet.writeByte(hexField.getByteValue());
                 }
                 case Int16, UInt16 ->
                 {
-                    packet.writeShort(valueField.getShortValue());
+                    packet.writeShort(hexField.getShortValue());
                 }
                 case Int32, UInt32 ->
                 {
-                    packet.writeInt(valueField.getIntValue());
+                    packet.writeInt(hexField.getIntValue());
                 }
                 case Float ->
                 {
-                    packet.writeFloat(valueField.getFloatValue());
+                    packet.writeFloat(hexField.getFloatValue());
                 }
                 case Double ->
                 {
-                    packet.writeDouble(valueField.getDoubleValue());
+                    packet.writeDouble(hexField.getDoubleValue());
                 }
             }
         }

@@ -36,9 +36,10 @@
         <VBox nodeOrientation="LEFT_TO_RIGHT" prefWidth="200.0">
             <ListView fx:id="selectedAddressesView" maxHeight="Infinity" VBox.vgrow="ALWAYS" />
             <HexTextField fx:id="valueWriteField" promptText="Value" />
-         <Button maxWidth="Infinity" mnemonicParsing="false" text="Write" onAction="#onWriteValueClicked"/>
+         <Button maxWidth="Infinity" mnemonicParsing="false" onAction="#onWriteValueClicked" text="Write" />
         </VBox>
     </HBox>
+   <CheckBox fx:id="autoUpdateCheckBox" mnemonicParsing="false" text="Auto Update" />
     <HBox alignment="CENTER_LEFT" spacing="10.0">
         <ProgressBar fx:id="searchProgressBar" maxWidth="Infinity" progress="0.0" HBox.hgrow="ALWAYS" />
         <Label fx:id="searchProgressLabel" text="0.0%" />

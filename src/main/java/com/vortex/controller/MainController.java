@@ -23,6 +23,7 @@ public class MainController
     private DraggableTabPane tabPane;
 
     Tab searchTab;
+    Tab memoryTab;
 
     @FXML
     private void initialize() throws IOException
@@ -56,18 +57,31 @@ public class MainController
         searchTab.setDisable(true);
         SearchTabController searchTabController = loader.getController();
 
-        tabPane.getTabs().addAll(connectionTab, loggerTab, searchTab);
+        loader = new FXMLLoader(getClass().getResource("/memoryTab.fxml"));
+        content = loader.load();
+        VBox.setVgrow(content, Priority.ALWAYS);
+        memoryTab = new Tab("Memory");
+        memoryTab.setContent(content);
+        memoryTab.setClosable(true);
+        memoryTab.setDisable(true);
+        MemoryTabController memoryTabController = loader.getController();
+
+        tabPane.getTabs().addAll(connectionTab, loggerTab, searchTab, memoryTab);
         tabPane.setMainPane(true);
         tabPane.setOnTabClosed(this::onTabClosed);  // 重要
 
         client.loggerTabController = loggerTabController;
         connectionTabController.loggerTabController = loggerTabController;
         searchTabController.loggerTabController = loggerTabController;
+        memoryTabController.loggerTabController = loggerTabController;
 
         connectionTabController.mainController = this;
 
         connectionTabController.client = client;
         searchTabController.client = client;
+        memoryTabController.client = client;
+
+        searchTabController.tab = searchTab;
 
         searchTab.selectedProperty().addListener((obs, oldVal, newVal) ->
         {
@@ -102,10 +116,12 @@ public class MainController
     public void onConnected()
     {
         searchTab.setDisable(false);
+        memoryTab.setDisable(false);
     }
 
     public void onDisconnected()
     {
         searchTab.setDisable(true);
+        memoryTab.setDisable(true);
     }
 }
