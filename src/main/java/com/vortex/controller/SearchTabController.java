@@ -5,12 +5,18 @@ import com.vortex.controls.HexTextField;
 import com.vortex.data.*;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
 
 import java.awt.*;
 import java.io.IOException;
@@ -60,6 +66,18 @@ public class SearchTabController implements PacketDispatcher.Listener
     private Label resultLabel;
 
     @FXML
+    private HexTextField valueField;
+
+    @FXML
+    private ListView<String> selectedAddressesView;
+
+    @FXML
+    private HexTextField valueWriteField;
+
+    @FXML
+    private Button valueWriteButton;
+
+    @FXML
     private TableView<SearchResult> searchResultsView;
 
     @FXML
@@ -87,15 +105,71 @@ public class SearchTabController implements PacketDispatcher.Listener
 
         valueTypeComboBox.getItems().addAll(ValueType.values());
         valueTypeComboBox.setValue(ValueType.Float);
+        valueTypeComboBox.valueProperty().addListener((observable, oldValue, newValue) ->
+        {
+            switch (newValue)
+            {
+                case Int8, UInt8 ->
+                {
+                    valueField.setMaxLength(2);
+                }
+                case Int16, UInt16 ->
+                {
+                    valueField.setMaxLength(4);
+                }
+                case Int32, UInt32, Float ->
+                {
+                    valueField.setMaxLength(8);
+                }
+                case Int64, UInt64, Double ->
+                {
+                    valueField.setMaxLength(16);
+                }
+            }
+        });
 
         comparisonComboBox.getItems().addAll(Comparison.values());
         comparisonComboBox.setValue(Comparison.Equal);
+
+        selectedAddressesView.setCellFactory(lv -> new ListCell<String>()
+        {
+            @Override
+            protected void updateItem(String item, boolean empty)
+            {
+                super.updateItem(item, empty);
+                if (empty || item == null)
+                {
+                    setText(null);
+                }
+                else
+                {
+                    setText(item);
+                    setAlignment(Pos.CENTER); // 中央寄せにする
+                }
+            }
+        });
+
+        searchResultsView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        searchResultsView.getSelectionModel().getSelectedItems().addListener((ListChangeListener<SearchResult>) change ->
+        {
+            ObservableList<String> selectedAddresses = FXCollections.observableArrayList();
+            for (SearchResult item : searchResultsView.getSelectionModel().getSelectedItems())
+            {
+                String address = format("0x%08X", item.getAddress());
+                selectedAddresses.add(address);
+            }
+            Platform.runLater(() -> selectedAddressesView.setItems(selectedAddresses));
+        });
 
         addressColumn.setCellValueFactory(cellData -> cellData.getValue().addressProperty().asObject());
         valueColumn.setCellValueFactory(cellData -> cellData.getValue().valueProperty().asObject());
 
         addressColumn.setCellFactory(column -> new TableCell<>()
         {
+            {
+                setAlignment(Pos.CENTER);
+            }
+
             @Override
             protected void updateItem(Integer item, boolean empty)
             {
@@ -106,6 +180,10 @@ public class SearchTabController implements PacketDispatcher.Listener
 
         valueColumn.setCellFactory(column -> new TableCell<>()
         {
+            {
+                setAlignment(Pos.CENTER);
+            }
+
             @Override
             protected void updateItem(Integer item, boolean empty)
             {
@@ -116,9 +194,85 @@ public class SearchTabController implements PacketDispatcher.Listener
 
         searchResultsView.setItems(searchResults);
 
-        stopwatchTimeline = new Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.millis(10), // 0.1秒ごとに更新
-                e -> updateStopwatchLabel()));
+        searchResultsView.widthProperty().addListener((obs, oldWidth, newWidth) ->
+        {
+            // カラム数を取得
+            int columnCount = searchResultsView.getColumns().size();
+            if (columnCount == 0)
+            {
+                return;
+            }
+
+            // TableViewの幅から、微調整用の余白（境界線やスクロールバー対策）を引く
+            double availableWidth = newWidth.doubleValue() - 2;
+
+            // 均等な幅に設定し、リサイズを禁止
+            double columnWidth = availableWidth / columnCount;
+            for (TableColumn<?, ?> column : searchResultsView.getColumns())
+            {
+                column.setPrefWidth(columnWidth);
+            }
+        });
+
+        searchResultsView.setRowFactory(tv ->
+        {
+            TableRow<SearchResult> row = new TableRow<>();
+            ContextMenu contextMenu = new ContextMenu();
+
+            MenuItem copyAddressItem = createCopyAddressItem(row);
+            MenuItem copyValueItem = createCopyValueItem(row);
+
+            contextMenu.getItems().addAll(copyAddressItem, copyValueItem);
+
+            row.contextMenuProperty().bind(Bindings.when(row.emptyProperty()).then((ContextMenu) null).otherwise(contextMenu));
+
+            return row;
+        });
+
+        Platform.runLater(() ->
+        {
+            searchTypeComboBox.setDisable(true);
+            comparisonComboBox.setDisable(true);
+            valueField.setDisable(true);
+        });
+
+        // 0.01秒ごとに更新
+        stopwatchTimeline = new Timeline(new javafx.animation.KeyFrame(javafx.util.Duration.millis(10), e -> updateStopwatchLabel()));
         stopwatchTimeline.setCycleCount(Timeline.INDEFINITE); // 無限に繰り返す
+    }
+
+    private MenuItem createCopyValueItem(TableRow<SearchResult> row)
+    {
+        MenuItem copyValueItem = new MenuItem("値をコピー");
+        copyValueItem.setOnAction(event ->
+        {
+            SearchResult entry = row.getItem();
+            if (entry != null)
+            {
+                Clipboard clipboard = Clipboard.getSystemClipboard();
+                ClipboardContent content = new ClipboardContent();
+                content.putString(format("0x%08X", entry.getValue()));
+                clipboard.setContent(content);
+            }
+        });
+        return copyValueItem;
+    }
+
+    private MenuItem createCopyAddressItem(TableRow<SearchResult> row)
+    {
+        MenuItem copyAddressItem = new MenuItem("アドレスをコピー");
+        copyAddressItem.setOnAction(event ->
+        {
+            SearchResult entry = row.getItem();
+            if (entry != null)
+            {
+                Clipboard clipboard = Clipboard.getSystemClipboard();
+                ClipboardContent content = new ClipboardContent();
+                content.putString(String.format("0x%08X", entry.getAddress()));
+                clipboard.setContent(content);
+            }
+        });
+        return copyAddressItem;
     }
 
     private void updateStopwatchLabel()
@@ -159,8 +313,17 @@ public class SearchTabController implements PacketDispatcher.Listener
                         searchButton.setText("Search");
                         searchButton.setDisable(false);
                         isExistFile = Bool.True;
+
+                        searchTypeComboBox.setDisable(false);
+                        comparisonComboBox.setDisable(false);
+                        startAddressField.setDisable(true);
+                        endAddressField.setDisable(true);
+                        valueTypeComboBox.setDisable(true);
+                        valueField.setDisable(true);
+
                         Toolkit.getDefaultToolkit().beep();
                     });
+                    onEndDumpOrSearch();
 
                     try
                     {
@@ -168,7 +331,7 @@ public class SearchTabController implements PacketDispatcher.Listener
                         resultsCount.writeInt(Command.GetSearchResultsCount.getValue());
                         client.sendPacket(resultsCount);
                     }
-                    catch(IOException e)
+                    catch (IOException e)
                     {
                         log(e.getMessage());
                     }
@@ -205,8 +368,10 @@ public class SearchTabController implements PacketDispatcher.Listener
                         searchProgressBar.setProgress(0.0f);
                         searchProgressLabel.setText(format("%.1f%%", 0.0f));
                         searchButton.setDisable(false);
+
                         Toolkit.getDefaultToolkit().beep();
                     });
+                    onEndDumpOrSearch();
 
                     try
                     {
@@ -214,7 +379,7 @@ public class SearchTabController implements PacketDispatcher.Listener
                         resultsCount.writeInt(Command.GetSearchResultsCount.getValue());
                         client.sendPacket(resultsCount);
                     }
-                    catch(IOException e)
+                    catch (IOException e)
                     {
                         log(e.getMessage());
                     }
@@ -243,8 +408,10 @@ public class SearchTabController implements PacketDispatcher.Listener
                         searchProgressBar.setProgress(0.0f);
                         searchProgressLabel.setText(format("%.1f%%", 0.0f));
                         searchButton.setDisable(false);
+
                         Toolkit.getDefaultToolkit().beep();
                     });
+                    onEndDumpOrSearch();
 
                     try
                     {
@@ -252,7 +419,7 @@ public class SearchTabController implements PacketDispatcher.Listener
                         resultsCount.writeInt(Command.GetSearchResultsCount.getValue());
                         client.sendPacket(resultsCount);
                     }
-                    catch(IOException e)
+                    catch (IOException e)
                     {
                         log(e.getMessage());
                     }
@@ -263,11 +430,18 @@ public class SearchTabController implements PacketDispatcher.Listener
                 int responseId = packet.readInt();
                 if (responseId == Response.Success.getValue())
                 {
+                    isExistFile = Bool.False;
                     Platform.runLater(() ->
                     {
                         searchButton.setText("Dump");
-                        isExistFile = Bool.False;
+                        searchTypeComboBox.setDisable(true);
+                        comparisonComboBox.setDisable(true);
+                        startAddressField.setDisable(false);
+                        endAddressField.setDisable(false);
+                        valueTypeComboBox.setDisable(false);
+                        valueField.setDisable(false);
                     });
+                    searchResults.clear();
                 }
                 else if (responseId == Response.Failure.getValue())
                 {
@@ -280,39 +454,57 @@ public class SearchTabController implements PacketDispatcher.Listener
                 int value = packet.readInt();
                 if (value == Bool.True.getValue())
                 {
-                    Platform.runLater(() -> searchButton.setText("Search"));
+                    Platform.runLater(() ->
+                    {
+                        searchButton.setText("Search");
+                        searchTypeComboBox.setDisable(false);
+                        comparisonComboBox.setDisable(false);
+                        valueField.setDisable(false);
+                        startAddressField.setDisable(true);
+                        endAddressField.setDisable(true);
+                        valueTypeComboBox.setDisable(true);
+                    });
                     isExistFile = Bool.True;
                 }
                 else if (value == Bool.False.getValue())
                 {
-                    Platform.runLater(() -> searchButton.setText("Dump"));
+                    Platform.runLater(() ->
+                    {
+                        searchButton.setText("Dump");
+                        searchTypeComboBox.setDisable(true);
+                        comparisonComboBox.setDisable(true);
+                        valueField.setDisable(true);
+                        startAddressField.setDisable(false);
+                        endAddressField.setDisable(false);
+                        valueTypeComboBox.setDisable(false);
+                    });
                     isExistFile = Bool.False;
                 }
             }
-            else if(commandId == Command.GetSearchResults.getValue())
+            else if (commandId == Command.GetSearchResults.getValue())
             {
                 int responseId = packet.readInt();
-                if(responseId == Response.Data.getValue())
+                if (responseId == Response.Data.getValue())
                 {
                     int address = packet.readInt();
                     int value = packet.readInt();
                     tempResults.add(new SearchResult(address, value));
                 }
-                else if(responseId == Response.Success.getValue())
+                else if (responseId == Response.Success.getValue())
                 {
                     searchResults.setAll(tempResults);
                     tempResults.clear();
                 }
             }
-            else if(commandId == Command.GetSearchResultsCount.getValue())
+            else if (commandId == Command.GetSearchResultsCount.getValue())
             {
                 int responseId = packet.readInt();
-                if(responseId == Response.Success.getValue())
+                if (responseId == Response.Success.getValue())
                 {
                     int resultCount = packet.readInt();
                     Platform.runLater(() -> resultLabel.setText(format("Results: %d", resultCount)));
                     searchResults.clear();
-                    if(resultCount < 1024)
+                    if (resultCount < 1024)
                     {
                         try
                         {
@@ -320,7 +512,7 @@ public class SearchTabController implements PacketDispatcher.Listener
                             resultsCount.writeInt(Command.GetSearchResults.getValue());
                             client.sendPacket(resultsCount);
                         }
-                        catch(IOException e)
+                        catch (IOException e)
                         {
                             log(e.getMessage());
                         }
@@ -344,6 +536,7 @@ public class SearchTabController implements PacketDispatcher.Listener
 
         searchStartTime = System.nanoTime();
         stopwatchTimeline.playFromStart();
+        onStartDumpOrSearch();
 
         // サーチ実行
         try
@@ -364,7 +557,7 @@ public class SearchTabController implements PacketDispatcher.Listener
                         WritablePacket packet = new WritablePacket();
                         packet.writeInt(Command.SpecificSearch.getValue());
                         packet.writeInt(comparisonComboBox.getValue().getValue());
-                        packet.writeInt(10);
+                        writePacketValueFromHexField(packet); // 任意の型の値を書き込み
                         client.sendPacket(packet);
                     }
                 }
@@ -398,6 +591,29 @@ public class SearchTabController implements PacketDispatcher.Listener
         catch (IOException e)
         {
             log("送信失敗: " + e.getMessage());
+        }
+    }
+
+    @FXML
+    private void onWriteValueClicked()
+    {
+        try
+        {
+            ObservableList<String> selectedItems = selectedAddressesView.getItems();
+            int[] addresses = selectedItems.stream().mapToInt(s -> Integer.parseInt(s.replace("0x", ""), 16)).toArray();
+            for(int address : addresses)
+            {
+                WritablePacket packet = new WritablePacket();
+                packet.writeInt(Command.WriteMemory.getValue());
+                packet.writeInt(address);
+                packet.writeInt(ValueType.Int32.getValue());
+                packet.writeInt(valueWriteField.getIntValue());
+                client.sendPacket(packet);
+            }
+        }
+        catch (Exception e)
+        {
+            log(e.getMessage());
         }
     }
 
@@ -435,5 +651,49 @@ public class SearchTabController implements PacketDispatcher.Listener
             }
             return None;
         }
+    }
+
+    private void writePacketValueFromHexField(WritablePacket packet)
+    {
+        try
+        {
+            switch (valueTypeComboBox.getValue())
+            {
+                case Int8, UInt8 ->
+                {
+                    packet.writeByte(valueField.getByteValue());
+                }
+                case Int16, UInt16 ->
+                {
+                    packet.writeShort(valueField.getShortValue());
+                }
+                case Int32, UInt32 ->
+                {
+                    packet.writeInt(valueField.getIntValue());
+                }
+                case Float ->
+                {
+                    packet.writeFloat(valueField.getFloatValue());
+                }
+                case Double ->
+                {
+                    packet.writeDouble(valueField.getDoubleValue());
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            log(e.getMessage());
+        }
+    }
+
+    private void onStartDumpOrSearch()
+    {
+
+    }
+
+    private void onEndDumpOrSearch()
+    {
+
     }
 }

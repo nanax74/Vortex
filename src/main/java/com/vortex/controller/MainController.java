@@ -22,6 +22,8 @@ public class MainController
     @FXML
     private DraggableTabPane tabPane;
 
+    Tab searchTab;
+
     @FXML
     private void initialize() throws IOException
     {
@@ -48,9 +50,10 @@ public class MainController
         loader = new FXMLLoader(getClass().getResource("/searchTab.fxml"));
         content = loader.load();
         VBox.setVgrow(content, Priority.ALWAYS);
-        Tab searchTab = new Tab("Search");
+        searchTab = new Tab("Search");
         searchTab.setContent(content);
         searchTab.setClosable(true);
+        searchTab.setDisable(true);
         SearchTabController searchTabController = loader.getController();
 
         tabPane.getTabs().addAll(connectionTab, loggerTab, searchTab);
@@ -60,6 +63,8 @@ public class MainController
         client.loggerTabController = loggerTabController;
         connectionTabController.loggerTabController = loggerTabController;
         searchTabController.loggerTabController = loggerTabController;
+
+        connectionTabController.mainController = this;
 
         connectionTabController.client = client;
         searchTabController.client = client;
@@ -92,5 +97,15 @@ public class MainController
             tabMenu.getItems().remove(item);
         });
         tabMenu.getItems().add(item);
+    }
+
+    public void onConnected()
+    {
+        searchTab.setDisable(false);
+    }
+
+    public void onDisconnected()
+    {
+        searchTab.setDisable(true);
     }
 }

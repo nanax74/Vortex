@@ -7,14 +7,32 @@ import java.util.function.UnaryOperator;
 
 public class HexTextField extends TextField
 {
+    private int maxLength = 8; // デフォルトは int (8桁)
+
     public HexTextField()
+    {
+        setFormatter();
+    }
+
+    public void setMaxLength(int length)
+    {
+        this.maxLength = length;
+        setFormatter();
+
+        // テキストが長すぎる場合は切り詰める
+        if (getText().length() > maxLength)
+        {
+            setText(getText().substring(0, maxLength));
+        }
+    }
+
+    private void setFormatter()
     {
         UnaryOperator<TextFormatter.Change> filter = change ->
         {
             String newText = change.getControlNewText();
-            if (newText.matches("[0-9a-fA-F]*"))
+            if (newText.matches("[0-9a-fA-F]*") && newText.length() <= maxLength)
             {
-                // すべて大文字に変換（任意）
                 change.setText(change.getText().toUpperCase());
                 return change;
             }
@@ -23,31 +41,94 @@ public class HexTextField extends TextField
         setTextFormatter(new TextFormatter<>(filter));
     }
 
+    private String getNormalizedText()
+    {
+        String text = getText();
+        if (text == null || text.isEmpty())
+        {
+            return "0";
+        }
+
+        // パディング（偶数桁など）
+        if (text.length() % 2 != 0)
+        {
+            text = "0" + text;
+        }
+        return text;
+    }
+
+    public byte getByteValue()
+    {
+        return (byte) Byte.parseByte(getNormalizedText(), 16);
+    }
+
+    public void setByteValue(byte value)
+    {
+        setText(String.format("%02X", value));
+    }
+
+    public short getShortValue()
+    {
+        return (short) Short.parseShort(getNormalizedText(), 16);
+    }
+
+    public void setShortValue(short value)
+    {
+        setText(String.format("%04X", value));
+    }
+
     public int getIntValue()
     {
-        return getText().isEmpty() ? 0 : Integer.parseInt(getText(), 16);
+        return Integer.parseInt(getNormalizedText(), 16);
     }
 
     public void setIntValue(int value)
     {
-        setText(String.format("%X", value));
+        setText(String.format("%08X", value));
+    }
+
+    public long getLongValue()
+    {
+        return Long.parseLong(getNormalizedText(), 16);
+    }
+
+    public void setLongValue(long value)
+    {
+        setText(String.format("%016X", value));
+    }
+
+    public float getFloatValue()
+    {
+        int bits = getIntValue();
+        return Float.intBitsToFloat(bits);
+    }
+
+    public void setFloatValue(float value)
+    {
+        int bits = Float.floatToIntBits(value);
+        setText(String.format("%08X", bits));
+    }
+
+    public double getDoubleValue()
+    {
+        long bits = getLongValue();
+        return Double.longBitsToDouble(bits);
+    }
+
+    public void setDoubleValue(double value)
+    {
+        long bits = Double.doubleToLongBits(value);
+        setText(String.format("%016X", bits));
     }
 
     public byte[] getBytes()
     {
-        String text = getText();
-        if (text.length() % 2 != 0)
-        {
-            // 偶数桁に調整（例: "F" → "0F"）
-            text = "0" + text;
-        }
-
-        int len = text.length();
+        String hex = getNormalizedText();
+        int len = hex.length();
         byte[] result = new byte[len / 2];
         for (int i = 0; i < len; i += 2)
         {
-            String byteStr = text.substring(i, i + 2);
-            result[i / 2] = (byte) Integer.parseInt(byteStr, 16);
+            result[i / 2] = (byte) Integer.parseInt(hex.substring(i, i + 2), 16);
         }
         return result;
     }

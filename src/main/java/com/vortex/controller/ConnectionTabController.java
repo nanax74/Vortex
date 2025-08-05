@@ -23,6 +23,8 @@ public class ConnectionTabController
     private final int PORT = 50000;
     private Thread receiveThread;
 
+    public MainController mainController;
+
     @FXML
     private TextField ipField;
     @FXML
@@ -54,6 +56,8 @@ public class ConnectionTabController
                     connectButton.setDisable(true);
                     disconnectButton.setDisable(false);
                 });
+
+                mainController.onConnected();
 
                 receiveThread = new Thread(this::receiveLoop);
                 receiveThread.setDaemon(true);
@@ -87,6 +91,8 @@ public class ConnectionTabController
                     connectButton.setDisable(false);
                     disconnectButton.setDisable(true);
                 });
+
+                mainController.onDisconnected();
             }
         }).start();
     }
