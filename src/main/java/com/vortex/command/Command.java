@@ -15,6 +15,11 @@ public enum Command
     CheckSearchFile(0x14),
     GetSearchResults(0x15),
     GetSearchResultsCount(0x16),
+    SubscribeAddress(0x17),
+    UnsubscribeAddress(0x18),
+
+    // Server -> Client
+    PushAddressValue(0x10000),
 
     // 応答要求(切断検出用)
     Respond(0x1000),

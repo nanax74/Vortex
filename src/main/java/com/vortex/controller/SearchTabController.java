@@ -46,21 +46,6 @@ public class SearchTabController implements PacketDispatcher.Listener
     ObservableList<SearchResult> searchResults = FXCollections.observableArrayList();
     private final List<SearchResult> tempResults = new ArrayList<>();
 
-    public static class SearchResultUtil
-    {
-        public static SearchResult findByAddress(ObservableList<SearchResult> list, int address)
-        {
-            for (SearchResult result : list)
-            {
-                if (result.getAddress() == address)
-                {
-                    return result;
-                }
-            }
-            return null; // 見つからなかった場合
-        }
-    }
-
     private long searchStartTime = 0L;
     private Timeline stopwatchTimeline;
 
@@ -101,7 +86,7 @@ public class SearchTabController implements PacketDispatcher.Listener
     private TableColumn<SearchResult, Integer> addressColumn;
 
     @FXML
-    private TableColumn<SearchResult, String> valueColumn;
+    private TableColumn<SearchResult, Long> valueColumn;
 
     @FXML
     private CheckBox autoUpdateCheckBox;
@@ -163,6 +148,7 @@ public class SearchTabController implements PacketDispatcher.Listener
                     valueField.setMaxLength(16);
                 }
             }
+            searchResultsView.refresh(); // 型が変わったら表示を更新
         });
 
         comparisonComboBox.getItems().addAll(Comparison.values());
@@ -199,7 +185,7 @@ public class SearchTabController implements PacketDispatcher.Listener
         });
 
         addressColumn.setCellValueFactory(cellData -> cellData.getValue().addressProperty().asObject());
-        valueColumn.setCellValueFactory(cellData -> cellData.getValue().hexValueProperty());
+        valueColumn.setCellValueFactory(cellData -> cellData.getValue().valueProperty().asObject());
 
         addressColumn.setCellFactory(column -> new TableCell<>()
         {
@@ -215,14 +201,14 @@ public class SearchTabController implements PacketDispatcher.Listener
             }
         });
 
-        valueColumn.setCellFactory(column -> new TableCell<SearchResult, String>()
+        valueColumn.setCellFactory(column -> new TableCell<>()
         {
             {
                 setAlignment(Pos.CENTER);
             }
 
             @Override
-            protected void updateItem(String item, boolean empty)
+            protected void updateItem(Long item, boolean empty)
             {
                 super.updateItem(item, empty);
                 if (empty || item == null)
@@ -231,12 +217,14 @@ public class SearchTabController implements PacketDispatcher.Listener
                 }
                 else
                 {
-                    // item は16進文字列（例: "0A3F"）なので、整形して表示する例
-                    setText("0x" + item);
+                    SearchResult result = getTableRow().getItem();
+                    if (result != null)
+                    {
+                        setText(result.getHexValue(valueTypeComboBox.getValue()));
+                    }
                 }
             }
         });
-
 
         searchResultsView.setItems(searchResults);
 
@@ -275,6 +263,18 @@ public class SearchTabController implements PacketDispatcher.Listener
             return row;
         });
 
+        autoUpdateCheckBox.selectedProperty().addListener((observable, oldValue, newValue) ->
+        {
+            if (newValue)
+            {
+                subscribeToUpdates();
+            }
+            else
+            {
+                unsubscribeFromUpdates();
+            }
+        });
+
         Platform.runLater(() ->
         {
             searchTypeComboBox.setDisable(true);
@@ -285,41 +285,39 @@ public class SearchTabController implements PacketDispatcher.Listener
         // 0.01秒ごとに更新
         stopwatchTimeline = new Timeline(new KeyFrame(Duration.millis(10), e -> updateStopwatchLabel()));
         stopwatchTimeline.setCycleCount(Timeline.INDEFINITE); // 無限に繰り返す
-
-        Timeline autoUpdateTimeline = new Timeline(new KeyFrame(Duration.millis(100), e -> updateSearchResultsValue()));
-        autoUpdateTimeline.setCycleCount(Timeline.INDEFINITE);
-        autoUpdateTimeline.play();
     }
 
-    private void updateSearchResultsValue()
+    private void subscribeToUpdates()
     {
-        if (tab.isSelected() && autoUpdateCheckBox.isSelected())
+        try
         {
-            try
+            WritablePacket packet = new WritablePacket();
+            packet.writeInt(Command.SubscribeAddress.getValue());
+            packet.writeInt(searchResults.size());
+            for (SearchResult result : searchResults)
             {
-                ObservableList<SearchResult> items = searchResultsView.getItems();
-
-                if (items.isEmpty())
-                {
-                    return;
-                }
-
-                WritablePacket packet = new WritablePacket();
-                packet.writeInt(Command.ReadMultipleMemory.getValue());
+                packet.writeInt(result.getAddress());
                 packet.writeInt(valueTypeComboBox.getValue().getValue());
-                packet.writeInt(items.size()); // アドレスの数
+            }
+            client.sendPacket(packet);
+        }
+        catch (IOException e)
+        {
+            log("Failed to subscribe to updates: " + e.getMessage());
+        }
+    }
 
-                for (SearchResult item : items)
-                {
-                    int address = item.getAddress();
-                    packet.writeInt(address);
-                }
-                client.sendPacket(packet);
-            }
-            catch (Exception ex)
-            {
-                log(ex.getMessage());
-            }
+    private void unsubscribeFromUpdates()
+    {
+        try
+        {
+            WritablePacket packet = new WritablePacket();
+            packet.writeInt(Command.UnsubscribeAddress.getValue());
+            client.sendPacket(packet);
+        }
+        catch (IOException e)
+        {
+            log("Failed to unsubscribe from updates: " + e.getMessage());
         }
     }
 
@@ -333,7 +331,7 @@ public class SearchTabController implements PacketDispatcher.Listener
             {
                 Clipboard clipboard = Clipboard.getSystemClipboard();
                 ClipboardContent content = new ClipboardContent();
-                content.putString("0x" + entry.getHexValue());
+                content.putString(entry.getHexValue(valueTypeComboBox.getValue()));
                 clipboard.setContent(content);
             }
         });
@@ -370,72 +368,23 @@ public class SearchTabController implements PacketDispatcher.Listener
         {
             // コマンドID
             int commandId = packet.readInt();
-            if (commandId == Command.ReadMultipleMemory.getValue())
+            if (commandId == Command.PushAddressValue.getValue())
             {
-                int responseId = packet.readInt();
-                if (responseId == Response.Data.getValue())
+                int address = packet.readInt();
+                int type = packet.readInt();
+                long value = packet.readLong(); // Stardustからはuint64_tで送られてくる
+
+                Platform.runLater(() ->
                 {
-                    int valueType = packet.readInt();
-                    int addressesCount = packet.readInt();
-                    for (int i = 0; i < addressesCount; ++i)
+                    for (SearchResult result : searchResults)
                     {
-                        int address = packet.readInt();
-                        if (valueType == ValueType.Int8.getValue() || valueType == ValueType.UInt8.getValue())
+                        if (result.getAddress() == address)
                         {
-                            byte value = packet.readByte();
-                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
-                            if (result != null)
-                            {
-                                result.setByte(value);
-                            }
-                        }
-                        else if (valueType == ValueType.Int16.getValue() || valueType == ValueType.UInt16.getValue())
-                        {
-                            short value = packet.readShort();
-                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
-                            if (result != null)
-                            {
-                                result.setShort(value);
-                            }
-                        }
-                        else if (valueType == ValueType.Int32.getValue() || valueType == ValueType.UInt32.getValue())
-                        {
-                            int value = packet.readInt();
-                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
-                            if (result != null)
-                            {
-                                result.setInt(value);
-                            }
-                        }
-                        else if (valueType == ValueType.Int64.getValue() || valueType == ValueType.UInt64.getValue())
-                        {
-                            long value = packet.readLong();
-                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
-                            if (result != null)
-                            {
-                                result.setLong(value);
-                            }
-                        }
-                        else if (valueType == ValueType.Float.getValue())
-                        {
-                            float value = packet.readFloat();
-                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
-                            if (result != null)
-                            {
-                                result.setFloat(value);
-                            }
-                        }
-                        else if (valueType == ValueType.Double.getValue())
-                        {
-                            double value = packet.readDouble();
-                            SearchResult result = SearchResultUtil.findByAddress(searchResults, address);
-                            if (result != null)
-                            {
-                                result.setDouble(value);
-                            }
+                            result.setValue(value);
+                            break;
                         }
                     }
-                }
+                });
             }
             else if (commandId == Command.DumpForSearch.getValue())
             {
@@ -640,7 +589,7 @@ public class SearchTabController implements PacketDispatcher.Listener
                 if (responseId == Response.Data.getValue())
                 {
                     int address = packet.readInt();
-                    int value = packet.readInt();
+                    long value = packet.readInt();
                     tempResults.add(new SearchResult(address, value));
                 }
                 else if (responseId == Response.Success.getValue())

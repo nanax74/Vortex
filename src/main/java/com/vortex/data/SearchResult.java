@@ -1,24 +1,25 @@
 package com.vortex.data;
 
-import javafx.beans.property.*;
+import com.vortex.command.ValueType;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.LongProperty;
+import javafx.beans.property.SimpleIntegerProperty;
+import javafx.beans.property.SimpleLongProperty;
 
 public class SearchResult
 {
     private final IntegerProperty address = new SimpleIntegerProperty();
-    private final StringProperty hexValue = new SimpleStringProperty("0");
+    private final LongProperty value = new SimpleLongProperty();
 
-    public SearchResult(int address, int value)
+    public SearchResult(int address, long value)
     {
-        this.address.set(address);
-        setInt(value);
+        setAddress(address);
+        setValue(value);
     }
 
     // Address
-    public IntegerProperty addressProperty()
-    {
-        return address;
-    }
-
     public int getAddress()
     {
         return address.get();
@@ -29,92 +30,48 @@ public class SearchResult
         this.address.set(address);
     }
 
-    // Hex Value Property (バインディング向け)
-    public StringProperty hexValueProperty()
+    public IntegerProperty addressProperty()
     {
-        return hexValue;
+        return address;
     }
 
-    public String getHexValue()
+    // Value
+    public long getValue()
     {
-        return hexValue.get();
+        return value.get();
     }
 
-    public void setHexValue(String hex)
+    public void setValue(long value)
     {
-        this.hexValue.set(normalize(hex));
+        this.value.set(value);
     }
 
-    // ---- Getter ----
-    public byte getByte()
+    public LongProperty valueProperty()
     {
-        return (byte) Byte.parseByte(normalize(hexValue.get()), 16);
+        return value;
     }
 
-    public short getShort()
-    {
-        return (short) Short.parseShort(normalize(hexValue.get()), 16);
-    }
+    // ---- Formatted Getters ----
 
-    public int getInt()
+    public String getHexValue(ValueType type)
     {
-        return Integer.parseInt(normalize(hexValue.get()), 16);
-    }
-
-    public long getLong()
-    {
-        return Long.parseLong(normalize(hexValue.get()), 16);
-    }
-
-    public float getFloat()
-    {
-        return Float.intBitsToFloat(getInt());
-    }
-
-    public double getDouble()
-    {
-        return Double.longBitsToDouble(getLong());
-    }
-
-    // ---- Setter ----
-    public void setByte(byte value)
-    {
-        setHexValue(String.format("0x%02X", value));
-    }
-
-    public void setShort(short value)
-    {
-        setHexValue(String.format("0x%04X", value));
-    }
-
-    public void setInt(int value)
-    {
-        setHexValue(String.format("0x%08X", value));
-    }
-
-    public void setLong(long value)
-    {
-        setHexValue(String.format("0x%016X", value));
-    }
-
-    public void setFloat(float value)
-    {
-        setInt(Float.floatToIntBits(value));
-    }
-
-    public void setDouble(double value)
-    {
-        setLong(Double.doubleToLongBits(value));
-    }
-
-    // ---- Utility ----
-    private String normalize(String hex)
-    {
-        if (hex == null || hex.isEmpty())
+        return switch (type)
         {
-            return "0";
-        }
-        hex = hex.replaceAll("[^0-9a-fA-F]", "");
-        return hex.toUpperCase();
+            case Int8, UInt8 -> String.format("%02X", (byte) getValue());
+            case Int16, UInt16 -> String.format("%04X", (short) getValue());
+            case Int32, UInt32, Float -> String.format("%08X", (int) getValue());
+            case Int64, UInt64, Double -> String.format("%016X", getValue());
+            default -> "";
+        };
+    }
+
+    public float getFloatValue()
+    {
+        return Float.intBitsToFloat((int) getValue());
+    }
+
+    public double getDoubleValue()
+    {
+        return Double.longBitsToDouble(getValue());
     }
 }
