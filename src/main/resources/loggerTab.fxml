@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-
-<?import javafx.scene.control.*?>
-<?import javafx.scene.layout.*?>
-
-<VBox xmlns="http://javafx.com/javafx/17.0.12" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.vortex.controller.LoggerTabController">
-    <TextArea fx:id="logArea" editable="false" VBox.vgrow="ALWAYS" />
-    <Button maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Clear" onAction="#onClearClicked" />
-</VBox>
