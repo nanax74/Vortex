@@ -3,10 +3,12 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 		xmlns:vm="clr-namespace:Vortex.ViewModels"
+		xmlns:v="clr-namespace:Vortex.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
         x:Class="Vortex.Views.MainView"
 		x:DataType="vm:MainViewModel">
-	<TabControl ItemsSource="{Binding Features}">
+	<TabControl ItemsSource="{Binding Features}"
+                vm:TabDragBehavior.IsDraggable="True">
 		<TabControl.ItemTemplate>
 			<DataTemplate x:DataType="vm:IFeatureViewModel">
 				<TextBlock Text="{Binding DisplayName}" />
@@ -18,4 +20,4 @@
 			</DataTemplate>
 		</TabControl.ContentTemplate>
 	</TabControl>
-</UserControl >
+</UserControl>
