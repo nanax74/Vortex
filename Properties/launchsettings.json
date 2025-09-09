@@ -1,0 +1,10 @@
+﻿{
+    "profiles": {
+      "Vortex (Unpackaged)": {
+        "commandName": "Project"
+      },
+      "Vortex (Package)": {
+        "commandName": "MsixPackage"
+      }
+    }
+}
