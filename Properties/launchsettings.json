@@ -1,10 +1,10 @@
-﻿{
-    "profiles": {
-      "Vortex (Unpackaged)": {
-        "commandName": "Project"
-      },
-      "Vortex (Package)": {
-        "commandName": "MsixPackage"
-      }
+{
+  "profiles": {
+    "Vortex (Package)": {
+      "commandName": "MsixPackage"
+    },
+    "Vortex (Unpackaged)": {
+      "commandName": "Project"
     }
+  }
 }

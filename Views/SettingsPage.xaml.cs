@@ -1,20 +1,12 @@
-﻿using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls;
 
-using Vortex.ViewModels;
-
-namespace Vortex.Views;
-
-// TODO: Set the URL for your privacy policy by updating SettingsPage_PrivacyTermsLink.NavigateUri in Resources.resw.
-public sealed partial class SettingsPage : Page
+namespace Vortex.Views
 {
-    public SettingsViewModel ViewModel
+    public sealed partial class SettingsPage : Page
     {
-        get;
-    }
-
-    public SettingsPage()
-    {
-        ViewModel = App.GetService<SettingsViewModel>();
-        InitializeComponent();
+        public SettingsPage()
+        {
+            InitializeComponent();
+        }
     }
 }

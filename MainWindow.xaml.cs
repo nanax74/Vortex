@@ -1,37 +1,76 @@
-﻿using Vortex.Helpers;
-
-using Windows.UI.ViewManagement;
+using Microsoft.UI;
+using Microsoft.UI.Composition.SystemBackdrops;
+using Microsoft.UI.Windowing;
+using Microsoft.UI.Xaml;
+using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
+using System;
+using System.IO;
+using Vortex.Views;
+using Windows.Graphics;
 
 namespace Vortex;
 
-public sealed partial class MainWindow : WindowEx
+public sealed partial class MainWindow : WinUIEx.WindowEx
 {
-    private Microsoft.UI.Dispatching.DispatcherQueue dispatcherQueue;
-
-    private UISettings settings;
-
     public MainWindow()
     {
         InitializeComponent();
 
-        AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets/WindowIcon.ico"));
-        Content = null;
-        Title = "AppDisplayName".GetLocalized();
+        if (MicaController.IsSupported())
+        {
+            SystemBackdrop = new MicaBackdrop();
+        }
+        else if (DesktopAcrylicController.IsSupported())
+        {
+            SystemBackdrop = new DesktopAcrylicBackdrop();
+        }
 
-        // Theme change code picked from https://github.com/microsoft/WinUI-Gallery/pull/1239
-        dispatcherQueue = Microsoft.UI.Dispatching.DispatcherQueue.GetForCurrentThread();
-        settings = new UISettings();
-        settings.ColorValuesChanged += Settings_ColorValuesChanged; // cannot use FrameworkElement.ActualThemeChanged event
+        if (AppWindowTitleBar.IsCustomizationSupported())
+        {
+            AppWindow.TitleBar.ExtendsContentIntoTitleBar = true;
+            AppWindow.TitleBar.ButtonBackgroundColor = Colors.Transparent;
+            AppWindow.TitleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
+
+            AppTitleBar.Loaded += (_, _) => UpdateDragRectangles();
+            AppTitleBar.SizeChanged += (_, _) => UpdateDragRectangles();
+        }
+
+        ContentFrame.Navigate(typeof(HomePage));
     }
 
-    // this handles updating the caption button colors correctly when indows system theme is changed
-    // while the app is open
-    private void Settings_ColorValuesChanged(UISettings sender, object args)
+    private void UpdateDragRectangles()
     {
-        // This calls comes off-thread, hence we will need to dispatch it to current app's thread
-        dispatcherQueue.TryEnqueue(() =>
+        LeftPaddingColumn.Width = new GridLength(AppWindow.TitleBar.LeftInset);
+        RightPaddingColumn.Width = new GridLength(AppWindow.TitleBar.RightInset);
+
+        var dragRect = new RectInt32
         {
-            TitleBarHelper.ApplySystemThemeToCaptionButtons();
-        });
+            X = (int)LeftPaddingColumn.ActualWidth,
+            Y = 0,
+            Height = (int)AppTitleBar.ActualHeight,
+            Width = (int)(AppTitleBar.ActualWidth - LeftPaddingColumn.ActualWidth - RightPaddingColumn.ActualWidth)
+        };
+
+        AppWindow.TitleBar.SetDragRectangles(new[] { dragRect });
+    }
+
+    private void NavView_ItemInvoked(NavigationView sender, NavigationViewItemInvokedEventArgs args)
+    {
+        if (args.InvokedItemContainer is NavigationViewItem item)
+        {
+            switch (item.Tag)
+            {
+                case "home":
+                    ContentFrame.Navigate(typeof(HomePage));
+                    break;
+                case "connection":
+                    ContentFrame.Navigate(typeof(ConnectionPage));
+                    break;
+                case "settings":
+                    ContentFrame.Navigate(typeof(SettingsPage));
+                    break;
+            }
+        }
     }
 }
