@@ -1,12 +1,15 @@
+using System.Diagnostics;
 using Microsoft.UI.Xaml.Controls;
+using Vortex.ViewModels;
 
-namespace Vortex.Views
+namespace Vortex.Views;
+
+public sealed partial class ConnectionPage : Page
 {
-    public sealed partial class ConnectionPage : Page
+    public ConnectionPage()
     {
-        public ConnectionPage()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
+
+        DataContext = App.GetService<ConnectionViewModel>();
     }
 }

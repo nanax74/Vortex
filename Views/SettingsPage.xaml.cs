@@ -1,12 +1,11 @@
 using Microsoft.UI.Xaml.Controls;
 
-namespace Vortex.Views
+namespace Vortex.Views;
+
+public sealed partial class SettingsPage : Page
 {
-    public sealed partial class SettingsPage : Page
+    public SettingsPage()
     {
-        public SettingsPage()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

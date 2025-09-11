@@ -9,7 +9,15 @@
             <ResourceDictionary.MergedDictionaries>
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
-            <x:String x:Key="AppTitleName">Vortex</x:String>
+            <Style TargetType="TextBlock">
+                <Setter Property="FontSize" Value="32"/>
+            </Style>
+            <Style TargetType="TextBox">
+                <Setter Property="FontSize" Value="32"/>
+            </Style>
+            <Style TargetType="Button">
+                <Setter Property="FontSize" Value="32"/>
+            </Style>
         </ResourceDictionary>
     </Application.Resources>
 </Application>
