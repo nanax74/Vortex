@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Page
+    x:Class="Vortex.Views.TerminalPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Vortex.Views"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d">
+
+    <Grid>
+        <TextBox Text="{Binding IpAddress, Mode=TwoWay}" PlaceholderText="IP Address" Margin="8" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+        <Grid ColumnDefinitions="*,*" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+            <Button Content="Connect" Margin="4" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Command="{Binding ConnectCommand}"/>
+            <Button Content="Disconnect" Margin="4" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Command="{Binding DisconnectCommand}"/>
+        </Grid>
+    </Grid>
+</Page>

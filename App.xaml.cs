@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.UI.Xaml;
+using Vortex.Services;
 using Vortex.ViewModels;
 using WinUIEx;
 
@@ -37,7 +38,10 @@ public partial class App : Application
         .UseContentRoot(AppContext.BaseDirectory)
         .ConfigureServices((context, services) =>
         {
+            services.AddSingleton<TcpClientService>();
+
             services.AddSingleton<ConnectionViewModel>();
+            services.AddSingleton<TerminalViewModel>();
         }).Build();
     }
 

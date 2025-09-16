@@ -3,49 +3,69 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using Vortex.Services;
 using VortexLib;
 
 namespace Vortex.ViewModels;
 
 public partial class ConnectionViewModel : ObservableObject
 {
-    private readonly TCPClient _client = new();
-
-    private string _ipAddress = "0.0.0.0";
+    private readonly TcpClientService _tcpClientService = App.GetService<TcpClientService>();
 
     public string IpAddress
     {
-        get => _ipAddress;
-        set => SetProperty(ref _ipAddress, value);
+        get
+        {
+            if (_tcpClientService == null) return "255.255.255.255";
+            return _tcpClientService.Host;
+        }
+
+        set
+        {
+            if(_tcpClientService == null) return;
+            _tcpClientService.Host = value;
+        }
     }
 
-    private const int _port = 50000;
+    public int Port
+    {
+        get
+        {
+            if (_tcpClientService == null) return 0;
+            return _tcpClientService.Port;
+        }
+
+        set
+        {
+            if (_tcpClientService == null) return;
+            _tcpClientService.Port = value;
+        }
+    }
+
+    public int TimeoutMs
+    {
+        get
+        {
+            if (_tcpClientService == null) return 0;
+            return _tcpClientService.TimeoutMs;
+        }
+
+        set
+        {
+            if (_tcpClientService == null) return;
+            _tcpClientService.TimeoutMs = value;
+        }
+    }
 
     [RelayCommand]
     private async Task Connect()
     {
-        if (IpAddress == string.Empty) return;
-
-        try
-        {
-            await _client.ConnectAsync(IpAddress, _port, TimeSpan.FromSeconds(3.0));
-        }
-        catch(Exception ex)
-        {
-            Debug.WriteLine($"Failed to connect to server. {ex}");
-        }
+        await _tcpClientService.ConnectAsync();
     }
 
     [RelayCommand]
-    private void Disconnect()
+    private async Task Disconnect()
     {
-        try
-        {
-            _client.Disconnect();
-        }
-        catch(Exception ex)
-        {
-            Debug.WriteLine($"Failed to disconnect to server. {ex}");
-        }
+        await _tcpClientService.DisconnectAsync();
     }
 }
