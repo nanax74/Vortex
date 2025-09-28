@@ -42,11 +42,32 @@
 
         <NavigationView x:Name="NavView" Grid.Row="1" IsBackButtonVisible="Collapsed" IsSettingsVisible="False" ItemInvoked="NavView_ItemInvoked">
             <NavigationView.MenuItems>
-                <NavigationViewItem Content="Home" Tag="home" Icon="Home"/>
-                <NavigationViewItem Content="Connection" Tag="connection" Icon="Link"/>
+                <NavigationViewItem Content="Home" Tag="home">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE80F;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem Content="Connection" Tag="connection">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE701;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+
+                <NavigationViewItem Content="Stream" Tag="stream">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE93E;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
+                
             </NavigationView.MenuItems>
+            
             <NavigationView.FooterMenuItems>
-                <NavigationViewItem Content="Settings" Tag="settings" Icon="Setting"/>
+                <NavigationViewItem Content="Settings" Tag="settings">
+                    <NavigationViewItem.Icon>
+                        <FontIcon Glyph="&#xE713;"/>
+                    </NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.FooterMenuItems>
 
             <Frame x:Name="ContentFrame"/>

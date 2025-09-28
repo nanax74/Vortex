@@ -9,10 +9,10 @@
     mc:Ignorable="d">
 
     <Grid RowDefinitions="Auto,Auto" Margin="4" HorizontalAlignment="Stretch" VerticalAlignment="Center">
-        <TextBox Text="{Binding IpAddress, Mode=TwoWay}" PlaceholderText="IP Address" Margin="8" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
-        <Grid ColumnDefinitions="*,*" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center">
-            <Button Content="Connect" Margin="4" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Command="{Binding ConnectCommand}"/>
-            <Button Content="Disconnect" Margin="4" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Command="{Binding DisconnectCommand}"/>
+        <TextBox Text="{Binding IPAddress, Mode=TwoWay}" PlaceholderText="IP Address" Margin="8" Grid.Row="0" HorizontalAlignment="Stretch" VerticalAlignment="Center"/>
+        <Grid ColumnDefinitions="*,*" Margin="4,0" Grid.Row="1" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+            <Button Content="Connect" Margin="4,0" Grid.Column="0" HorizontalAlignment="Stretch" VerticalAlignment="Center" Command="{Binding ConnectCommand}"/>
+            <Button Content="Disconnect" Margin="4,0" Grid.Column="1" HorizontalAlignment="Stretch" VerticalAlignment="Center" Command="{Binding DisconnectCommand}"/>
         </Grid>
     </Grid>
 </Page>

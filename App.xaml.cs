@@ -41,7 +41,7 @@ public partial class App : Application
             services.AddSingleton<TcpClientService>();
 
             services.AddSingleton<ConnectionViewModel>();
-            services.AddSingleton<TerminalViewModel>();
+            services.AddSingleton<StreamViewModel>();
         }).Build();
     }
 

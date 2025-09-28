@@ -3,12 +3,12 @@ using Vortex.ViewModels;
 
 namespace Vortex.Views;
 
-public sealed partial class TerminalPage : Page
+public sealed partial class StreamPage : Page
 {
-    public TerminalPage()
+    public StreamPage()
     {
         InitializeComponent();
 
-        DataContext = App.GetService<TerminalViewModel>();
+        DataContext = App.GetService<StreamViewModel>();
     }
 }

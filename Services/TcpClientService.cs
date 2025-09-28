@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Threading.Tasks;
@@ -10,6 +11,13 @@ namespace Vortex.Services;
 public class TcpClientService
 {
     private readonly MessageClient _client = new();
+
+    public TcpClientService()
+    {
+        _client.OnReceived += OnReceived;
+    }
+
+    public List<Action<byte[]>> ReceiveEvents = [];
 
     private string _host = "0.0.0.0";
     public IPAddress IPAddress
@@ -43,6 +51,8 @@ public class TcpClientService
 
     public int TimeoutMs { get; set; } = 1000 * 3;
 
+    public bool IsConnected => _client.IsConnected;
+
     public async Task ConnectAsync()
     {
         if (IPAddress == IPAddress.None) return;
@@ -67,5 +77,15 @@ public class TcpClientService
         {
             Debug.WriteLine($"Failed to disconnect to server. {ex}");
         }
+    }
+
+    public void Send(byte[] data)
+    {
+        _client.Send(data);
+    }
+
+    public void OnReceived(byte[] data)
+    {
+        foreach (var e in ReceiveEvents) e(data);
     }
 }

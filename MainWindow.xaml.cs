@@ -67,6 +67,9 @@ public sealed partial class MainWindow : WinUIEx.WindowEx
                 case "connection":
                     ContentFrame.Navigate(typeof(ConnectionPage));
                     break;
+                case "stream":
+                    ContentFrame.Navigate(typeof(StreamPage));
+                    break;
                 case "settings":
                     ContentFrame.Navigate(typeof(SettingsPage));
                     break;

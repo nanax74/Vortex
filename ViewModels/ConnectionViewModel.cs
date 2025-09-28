@@ -1,10 +1,8 @@
 using System;
-using System.Diagnostics;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Vortex.Services;
-using VortexLib;
 
 namespace Vortex.ViewModels;
 
@@ -12,7 +10,16 @@ public partial class ConnectionViewModel : ObservableObject
 {
     private readonly TcpClientService _tcpClientService = App.GetService<TcpClientService>();
 
-    public string IpAddress
+    public ConnectionViewModel()
+    {
+        Func<bool> connectCanExecute = () => !_tcpClientService.IsConnected;
+        ConnectCommand = new AsyncRelayCommand(Connect, connectCanExecute);
+
+        Func<bool> disconnectCanExecute = () => _tcpClientService.IsConnected;
+        DisconnectCommand = new AsyncRelayCommand(Disconnect, disconnectCanExecute);
+    }
+
+    public string IPAddress
     {
         get
         {
@@ -24,6 +31,7 @@ public partial class ConnectionViewModel : ObservableObject
         {
             if(_tcpClientService == null) return;
             _tcpClientService.Host = value;
+            OnPropertyChanged(nameof(IPAddress));
         }
     }
 
@@ -39,6 +47,7 @@ public partial class ConnectionViewModel : ObservableObject
         {
             if (_tcpClientService == null) return;
             _tcpClientService.Port = value;
+            OnPropertyChanged(nameof(Port));
         }
     }
 
@@ -54,18 +63,24 @@ public partial class ConnectionViewModel : ObservableObject
         {
             if (_tcpClientService == null) return;
             _tcpClientService.TimeoutMs = value;
+            OnPropertyChanged(nameof(TimeoutMs));
         }
     }
 
-    [RelayCommand]
+    public IAsyncRelayCommand ConnectCommand { get; }
+    public IAsyncRelayCommand DisconnectCommand { get; }
+
     private async Task Connect()
     {
         await _tcpClientService.ConnectAsync();
+        ConnectCommand.NotifyCanExecuteChanged();
+        DisconnectCommand.NotifyCanExecuteChanged();
     }
 
-    [RelayCommand]
     private async Task Disconnect()
     {
         await _tcpClientService.DisconnectAsync();
+        ConnectCommand.NotifyCanExecuteChanged();
+        DisconnectCommand.NotifyCanExecuteChanged();
     }
 }
